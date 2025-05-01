@@ -25,10 +25,14 @@ const userSchema = await mongoose.Schema({
     //     enum: ["user", "admin"],
     //     default: "user"
     // },
-    profileImg: {
+    // profileImg: {
+    //     type: String,
+    //     default:""
+    // },
+    location: {
         type: String,
-        default:""
-    },
+        default: ""
+    }
 
 }, {timestamps: true})
 

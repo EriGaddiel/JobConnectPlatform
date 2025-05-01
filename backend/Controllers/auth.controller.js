@@ -7,9 +7,9 @@ export const signup = async (req, res) =>{
     try {
         const { fullName, username, email, password } = req.body
 
-        if (!fullName || !username || !email || !password) {
-           return res.status(400).json({ error: "All fields are required"})
-        }
+        // if (!fullName || !username || !email || !password) {
+        //    return res.status(400).json({ error: "All fields are required"})
+        // }
 
 
         const emailRegex = /^[^\$@]+@[^\$@]+\.[^\$@]+$/
@@ -101,3 +101,14 @@ export const logout = async (req, res) => {
         console.log(`Error occurred in the logout controller: ${error.message}`);  
     }  
 } 
+
+export const getMe = async (req, res) =>{
+    try {
+        const user = req.user;  
+ 
+        return res.status(200).json({ user });
+    } catch (error) {
+        console.log("Error in the getMe controller", error.message)
+        return res.status(500).json({error: "Internal Server Error"})
+    }
+}
