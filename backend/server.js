@@ -3,6 +3,10 @@ import dotenv from "dotenv"
 import cors from "cors"
 import cookieParser from 'cookie-parser'
 
+import helmet from "helmet"
+import xss from 'xss-clean'
+import ExpressMongoSanitize from "express-mongo-sanitize"
+
 import authRoutes from "./Routes/auth.routes.js"
 import userRoutes from "./Routes/user.routes.js"
 import jobRoutes from "./Routes/job.routes.js"
@@ -18,6 +22,9 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true}))
 
 app.use(cors())
+app.use(helmet())
+app.use(xss())
+app.use(ExpressMongoSanitize())
 app.use(cookieParser())
 
 app.use("/api/auth", authRoutes)
