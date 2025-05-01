@@ -17,8 +17,40 @@ export const postJob = async (req, res) => {
 
 export const getAllJobs = async (req, res) => {  
     try {  
-        const jobs = await Job.find().populate('company', 'username');  
-        res.status(200).json(jobs);  
+        const {status, employmentType, company, sort } = req.query
+
+        const queryObject = { createdBy: req.user.id }
+
+        if(status && status !== 'all'){
+            queryObject.status = status
+        }
+
+        if(employmentType && employmentType !== 'all'){
+            queryObject.employmentType = employmentType
+        }
+
+        if(company && company !== 'all'){
+            queryObject.company = { $regex: company, $options: 'i' }
+        }
+
+        let queryResult = Job.find(queryObject) 
+
+        if (sort === 'latest'){
+            queryResult = queryResult.sort('-createdAt')
+        }
+
+        if (sort === 'oldest'){
+            queryResult = queryResult.sort('createdAt')
+        }
+        if (sort === 'a-z'){
+            queryResult = queryResult.sort('title')
+        }
+        if (sort === 'z-a'){
+            queryResult = queryResult.sort('-title')
+        }
+
+        const jobs = await queryResult
+        res.status(200).json({totalJobs: jobs.length, jobs})
     } catch (error) {  
         res.status(500).json({ error: "Internal server error" });  
         console.log(`Error occurred in the Job controller: ${error.message}`);  
