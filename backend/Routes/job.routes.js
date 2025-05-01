@@ -1,13 +1,15 @@
 import express from 'express';
-import { postJob, getAllJobs, getJobById, updateJob, deleteJob } from '../Controllers/job.controller.js';
+import { postJob, getAllJobs, getJobById, updateJob, deleteJob, jobStats } from '../Controllers/job.controller.js';
+import { protectRoute } from '../middleware/protectRoute.js';
 
 
 const router = express.Router()
 
-router.post('/jobs', postJob);  
-router.get('/jobs', getAllJobs);  
-router.get('/jobs/:id', getJobById);  
-router.put('/jobs/:id', updateJob);  
-router.delete('/jobs/:id', deleteJob);  
+router.post('/post-job', protectRoute, postJob);  
+router.get('/get-jobs',protectRoute, getAllJobs);  
+// router.get('/jobs/:id', getJobById);  
+router.post('/update-job/:id', protectRoute,updateJob);  
+router.delete('/delete-job/:id', protectRoute,deleteJob);  
+router.get('/job-stats', protectRoute,jobStats);  
 
 export default router;

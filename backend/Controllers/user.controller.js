@@ -26,13 +26,13 @@ export const updateUser  = async (req, res) => {
         }
         user.fullName = fullName || user.fullName
         user.username = username || user.username
-        user.username = email || user.email
+        user.email = email || user.email
 
-        user = await user.save()
+        const updatedUser = await user.save()
 
-        const { password: pass, ...rest } = user._doc;  
+        const { password: pass, ...rest } = updatedUser._doc  
 
-        return res.status(200).json(rest); 
+        return res.status(200).json(rest)
     }catch(error){
 
     }

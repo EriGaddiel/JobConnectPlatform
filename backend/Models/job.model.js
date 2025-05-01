@@ -10,8 +10,7 @@ const jobSchema = new mongoose.Schema({
       required: true,  
     },  
     company: {  
-      type: mongoose.Schema.Types.ObjectId,  
-      ref: 'User',  
+      type: String,    
       required: true,  
     },  
     location: {  
@@ -24,24 +23,21 @@ const jobSchema = new mongoose.Schema({
       type: String,  
       enum: ['full-time', 'part-time', 'freelance', 'contract'],  
       required: true,  
+      default: "full-time"
     },  
     requirements: {  
       type: [String],  
     },  
-    createdAt: {  
-      type: Date,  
-      default: Date.now,  
-    },  
-    updatedAt: {  
-      type: Date,  
-      default: Date.now,  
-    },  
+    createdBy: {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',   
+    }, 
     status: {  
       type: String,  
-      enum: ['active', 'closed'],  
-      default: 'active',  
+      enum: ['pending','interview','reject'],  
+      default: 'pending',  
     }  
-  });  
+  },{timestamps: true});  
   
   const Job = mongoose.model('Job', jobSchema);  
   export default Job;

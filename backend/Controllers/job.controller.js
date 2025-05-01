@@ -1,4 +1,6 @@
 import Job from '../Models/job.model.js'  
+import mongoose, { mongo } from 'mongoose'
+import moment from 'moment'
 
 export const postJob = async (req, res) => {  
     try {  
@@ -77,4 +79,52 @@ export const deleteJob = async (req, res) => {
         res.status(500).json({ error: "Internal server error", detail: error.message })
         console.log(`Error occurred while deleting job: ${error.message}`)
     }   
-};  
+}
+
+
+export const jobStats = async (req, res) => {  
+    const stats = await Job.aggregate([
+        {
+            $match: {
+                createdBy: new mongoose.Types.ObjectId(req.user.id),
+            },
+        },
+
+        {
+            $group: {
+                _id: '$status', count: { $sum : 1},
+            }
+        }
+    ])
+
+    const defaultStats = {
+        pending: stats.pending || 0,
+        reject: stats.reject || 0,
+        interview: stats.interview || 0
+    }
+
+    let monthlyApplication = await Job.aggregate([
+        {
+            $match: {
+                createdBy: new mongoose.Types.ObjectId(req.user.id)
+            },
+        },
+        {
+            $group:{
+                _id: {
+                    year: { $year: '$createdAt' },
+                    month: { $month: '$createdAt' }
+                },
+                count: { $sum: 1 }
+            },
+        },
+    ])
+
+    monthlyApplication = monthlyApplication.map(item => {
+        const {_id: {year,month}, count} = item
+        const date = moment().month(month - 1).year(year).format('MMM Y')
+        return {date, count}
+    }).reverse()
+
+    res.status(200).json({ totalJobs: stats.length, defaultStats, monthlyApplication })
+} 
