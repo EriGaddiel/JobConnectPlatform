@@ -4,16 +4,16 @@ import moment from 'moment'
 
 export const postJob = async (req, res) => {  
     try {  
-        const { title, description, company, location, salary, employmentType, requirements } = req.body;  
-        const newJob = new Job({ title, description, company, location, salary, employmentType, requirements, createdBy: req.user.id});  
-        await newJob.save();  
+        const { title, description, company, location, salary, employmentType, requirements } = req.body  
+        const newJob = new Job({ title, description, company, location, salary, employmentType, requirements, createdBy: req.user.id})  
+        await newJob.save()  
 
-        res.status(201).json({ message: "Job posted successfully!" });  
+        res.status(201).json({ message: "Job posted successfully!" })  
     } catch (error) {  
-        res.status(500).json({ error: "Internal server error" });  
-        console.log(`Error occurred in the Job controller: ${error.message}`);  
+        res.status(500).json({ error: "Internal server error" })  
+        console.log(`Error occurred in the Job controller: ${error.message}`)  
     }  
-};  
+}  
 
 export const getAllJobs = async (req, res) => {  
     try {  
@@ -61,14 +61,14 @@ export const getAllJobs = async (req, res) => {
         const jobs = await queryResult
         res.status(200).json({totalJobs: totalJobs, jobs, numOfPage})
     } catch (error) {  
-        res.status(500).json({ error: "Internal server error" });  
-        console.log(`Error occurred in the Job controller: ${error.message}`);  
+        res.status(500).json({ error: "Internal server error" })  
+        console.log(`Error occurred in the Job controller: ${error.message}`)  
     }  
-};  
+}  
   
 export const getJobById = async (req, res) => {  
     // Logic to get job by ID  
-};  
+}  
 
 export const updateJob = async (req, res) => {  
     try{

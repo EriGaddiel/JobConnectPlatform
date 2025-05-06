@@ -10,6 +10,7 @@ import ExpressMongoSanitize from "express-mongo-sanitize"
 import authRoutes from "./Routes/auth.routes.js"
 import userRoutes from "./Routes/user.routes.js"
 import jobRoutes from "./Routes/job.routes.js"
+import applicationRoutes from "./Routes/application.routes.js"
 
 import connectMongoDB from "./db/connectMongoDB.js"
 
@@ -30,6 +31,7 @@ app.use(cookieParser())
 app.use("/api/auth", authRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/jobs", jobRoutes)
+app.use("/api/application", applicationRoutes)
 
 
 

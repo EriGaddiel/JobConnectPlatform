@@ -21,7 +21,7 @@ export const updateUser  = async (req, res) => {
                 return res.status(400).json({ error: "Password must be at least 6 characters long"})
             }
 
-            const salt = await bcrypt.genSalt(12);
+            const salt = await bcrypt.genSalt(12)
             user.password = await bcrypt.hash(newPassword, salt)
         }
         user.fullName = fullName || user.fullName

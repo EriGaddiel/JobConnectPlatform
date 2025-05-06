@@ -17,12 +17,12 @@ export const signup = async (req, res) =>{
             return res.status(400).json( {error: " Invalid email format"})
         }
 
-        const existingUser = await User.findOne({ username });
+        const existingUser = await User.findOne({ username })
         if (existingUser) {
             return res.status(400).json( {error: " Username is already taken"})
         }
 
-        const existingEmail = await User.findOne({ email });
+        const existingEmail = await User.findOne({ email })
         if (existingEmail) {
             return res.status(400).json( {error: " Email is already taken"})
         }
@@ -62,52 +62,52 @@ export const signup = async (req, res) =>{
 
 export const login = async (req, res) => {  
     try {  
-        const { usernameOrEmail, password } = req.body;  
+        const { usernameOrEmail, password } = req.body  
  
         if (!usernameOrEmail || !password) {  
-            return res.status(400).json({ error: "Both username/email and password are required" });  
+            return res.status(400).json({ error: "Both username/email and password are required" })  
         }  
         const user = await User.findOne({  
             $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }]  
-        });  
+        })  
   
         if (!user) {  
-            return res.status(400).json({ error: "Invalid username/email or password" });  
+            return res.status(400).json({ error: "Invalid username/email or password" })  
         }  
 
-        const isMatch = await bcrypt.compare(password, user.password);  
+        const isMatch = await bcrypt.compare(password, user.password)  
         if (!isMatch) {  
-            return res.status(400).json({ error: "Invalid username/email or password" });  
+            return res.status(400).json({ error: "Invalid username/email or password" })  
         }  
 
-        generateTokenAndSetCookie(user._id, res);  
+        generateTokenAndSetCookie(user._id, res)  
 
-        const { password: pass, ...rest } = user._doc;  
+        const { password: pass, ...rest } = user._doc  
 
-        return res.status(200).json(rest);  
+        return res.status(200).json(rest)  
 
     } catch (error) {  
-        res.status(500).json({ error: "Internal server error" });  
-        console.log(`Error occurred in the login controller: ${error.message}`);  
+        res.status(500).json({ error: "Internal server error" })  
+        console.log(`Error occurred in the login controller: ${error.message}`)  
     }  
 }
 
 export const logout = async (req, res) => {  
     try {  
-        res.clearCookie('jwt'); 
+        res.clearCookie('jwt') 
 
-        return res.status(200).json({ message: "Successfully logged out" });  
+        return res.status(200).json({ message: "Successfully logged out" })  
     } catch (error) {  
-        res.status(500).json({ error: "Internal server error" });  
-        console.log(`Error occurred in the logout controller: ${error.message}`);  
+        res.status(500).json({ error: "Internal server error" })  
+        console.log(`Error occurred in the logout controller: ${error.message}`)  
     }  
 } 
 
 export const getMe = async (req, res) =>{
     try {
-        const user = req.user;  
+        const user = req.user  
  
-        return res.status(200).json({ user });
+        return res.status(200).json({ user })
     } catch (error) {
         console.log("Error in the getMe controller", error.message)
         return res.status(500).json({error: "Internal Server Error"})

@@ -37,7 +37,7 @@ const jobSchema = new mongoose.Schema({
       enum: ['open', 'close'],  
       default: 'open',  
     }  
-  },{timestamps: true});  
+  },{timestamps: true})  
   
-  const Job = mongoose.model('Job', jobSchema);  
-  export default Job;
+  const Job = mongoose.model('Job', jobSchema)  
+  export default Job
