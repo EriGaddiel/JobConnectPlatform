@@ -5,11 +5,11 @@ import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js"
 
 export const signup = async (req, res) =>{
     try {
-        const { fullName, username, email, password } = req.body
+        const { fullName, username, email, password, userType } = req.body
 
-        // if (!fullName || !username || !email || !password) {
-        //    return res.status(400).json({ error: "All fields are required"})
-        // }
+        if (!fullName || !username || !email || !password) {
+           return res.status(400).json({ error: "All fields are required"})
+        }
 
 
         const emailRegex = /^[^\$@]+@[^\$@]+\.[^\$@]+$/
@@ -38,7 +38,8 @@ export const signup = async (req, res) =>{
             username,
             fullName,
             email,
-            password: hashPassword
+            password: hashPassword,
+            userType
         })
 
         if (newUser) {

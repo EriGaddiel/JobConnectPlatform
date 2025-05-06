@@ -139,9 +139,8 @@ export const jobStats = async (req, res) => {
     ])
 
     const defaultStats = {
-        pending: stats.pending || 0,
-        reject: stats.reject || 0,
-        interview: stats.interview || 0
+        pending: stats.open || 0,
+        reject: stats.close || 0,
     }
 
     let monthlyApplication = await Job.aggregate([

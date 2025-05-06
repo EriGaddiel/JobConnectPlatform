@@ -34,8 +34,8 @@ const jobSchema = new mongoose.Schema({
     }, 
     status: {  
       type: String,  
-      enum: ['pending','interview','reject'],  
-      default: 'pending',  
+      enum: ['open', 'close'],  
+      default: 'open',  
     }  
   },{timestamps: true});  
   

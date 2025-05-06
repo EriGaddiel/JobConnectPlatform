@@ -20,15 +20,21 @@ const userSchema = await mongoose.Schema({
         required: true, 
         minLength: 6
     },
-    // usertype: {
-    //     type: String,
-    //     enum: ["user", "admin"],
-    //     default: "user"
-    // },
-    // profileImg: {
-    //     type: String,
-    //     default:""
-    // },
+    userType: {
+        type: String,
+        enum: ["jobSeeker", "employer"],
+        default: "jobSeeker"
+    },
+    profileImg: {
+        type: String,
+        default:""
+    },
+    bio: {
+        type: String
+    },
+    skills: {
+        type: [String]
+    },
     location: {
         type: String,
         default: ""
