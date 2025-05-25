@@ -1,6 +1,4 @@
 import Application from '../Models/application.model.js'
-import Job from '../Models/job.model.js'
-import User from '../Models/user.model.js'  
 
 export const applyForJob = async (req, res) => {  
     const { coverLetter, resume, phoneNumber,preferredWorkingType } = req.body
@@ -25,7 +23,7 @@ export const applyForJob = async (req, res) => {
 export const getApplicationsByUser = async (req, res) => {  
     try {  
         const applications = await Application.find({ applicant: req.user._id }).populate('job', 'title company')  
-        res.status(200).json(applications)  
+        res.status(200).json({ totalApplications: applications.length, applications})  
     } catch (error) {  
         res.status(500).json({ error: error.message })  
     }  
@@ -66,7 +64,7 @@ export const getApplicationsByJob = async (req, res) => {
 
     try {  
         const applications = await Application.find({ job: jobId }).populate('applicant', 'username fullName')  
-        res.status(200).json(applications)  
+        res.status(200).json({totalApplications: applications.length, applications})  
     } catch (error) {  
         res.status(500).json({ error: error.message })  
     }  

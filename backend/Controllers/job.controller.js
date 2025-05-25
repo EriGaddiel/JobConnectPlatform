@@ -1,5 +1,5 @@
 import Job from '../Models/job.model.js'  
-import mongoose, { mongo } from 'mongoose'
+import mongoose from 'mongoose'
 import moment from 'moment'
 
 export const postJob = async (req, res) => {  
