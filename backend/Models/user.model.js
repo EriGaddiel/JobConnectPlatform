@@ -38,6 +38,22 @@ const userSchema = await mongoose.Schema({
     location: {
         type: String,
         default: ""
+    },
+    averageRatingAsEmployer: {
+        type: Number,
+        default: 0
+    },
+    numberOfEmployerRatings: {
+        type: Number,
+        default: 0
+    },
+    averageRatingAsCandidate: {
+        type: Number,
+        default: 0
+    },
+    numberOfCandidateRatings: {
+        type: Number,
+        default: 0
     }
 
 }, {timestamps: true})
