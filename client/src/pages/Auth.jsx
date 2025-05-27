@@ -1,0 +1,268 @@
+
+import { useState } from "react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "sonner";
+import Navbar from "@/components/navbar";
+import { useToast } from "@/hooks/use-toast";
+
+export default function Auth() {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'login';
+  const defaultRole = searchParams.get('role') || 'jobseeker';
+  
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [role, setRole] = useState(defaultRole);
+  
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  
+  const [registerName, setRegisterName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
+  
+  const navigate = useNavigate();
+  const { toast: sendToast } = useToast();
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    
+    // Frontend validation only - no actual auth implementation
+    if (!loginEmail || !loginPassword) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    // Simulate successful login
+    toast.success("Login successful! Redirecting to dashboard...");
+    
+    // Redirect based on role
+    setTimeout(() => {
+      if (role === "employer") {
+        navigate("/employer/dashboard");
+      } else if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    }, 1500);
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    
+    // Frontend validation only
+    if (!registerName || !registerEmail || !registerPassword || !registerConfirmPassword) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    if (registerPassword !== registerConfirmPassword) {
+      sendToast({
+        variant: "destructive",
+        title: "Passwords do not match",
+        description: "Please make sure your passwords match."
+      });
+      return;
+    }
+    
+    // Simulate successful registration
+    toast.success("Account created! Please login with your credentials.");
+    setActiveTab("login");
+  };
+
+  return (
+    <>
+      <Navbar />
+      
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-md mx-auto">
+            <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Login to JobConnect</CardTitle>
+                    <CardDescription>
+                      Enter your credentials to access your account
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-role">I am a:</Label>
+                      <RadioGroup 
+                        id="login-role" 
+                        value={role} 
+                        onValueChange={setRole} 
+                        className="flex flex-row space-x-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="jobseeker" id="login-jobseeker" />
+                          <Label htmlFor="login-jobseeker">Job Seeker</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="employer" id="login-employer" />
+                          <Label htmlFor="login-employer">Employer</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="admin" id="login-admin" />
+                          <Label htmlFor="login-admin">Admin</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="password">Password</Label>
+                          <Link to="/forgot-password" className="text-sm text-jobconnect-primary hover:underline">
+                            Forgot password?
+                          </Link>
+                        </div>
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          placeholder="••••••••" 
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">Login</Button>
+                    </form>
+                  </CardContent>
+                  
+                  <CardFooter className="flex flex-col space-y-4">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                      Don't have an account?{" "}
+                      <button 
+                        onClick={() => setActiveTab("register")} 
+                        className="text-jobconnect-primary hover:underline"
+                      >
+                        Sign up
+                      </button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="register" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create an Account</CardTitle>
+                    <CardDescription>
+                      Enter your details to create your JobConnect account
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="register-role">I am a:</Label>
+                      <RadioGroup 
+                        id="register-role" 
+                        value={role} 
+                        onValueChange={setRole} 
+                        className="flex flex-row space-x-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="jobseeker" id="register-jobseeker" />
+                          <Label htmlFor="register-jobseeker">Job Seeker</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="employer" id="register-employer" />
+                          <Label htmlFor="register-employer">Employer</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <form onSubmit={handleRegister} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input 
+                          id="name" 
+                          placeholder="John Smith" 
+                          value={registerName}
+                          onChange={(e) => setRegisterName(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="register-email">Email</Label>
+                        <Input 
+                          id="register-email" 
+                          type="email" 
+                          placeholder="you@example.com" 
+                          value={registerEmail}
+                          onChange={(e) => setRegisterEmail(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="register-password">Password</Label>
+                        <Input 
+                          id="register-password" 
+                          type="password" 
+                          placeholder="••••••••" 
+                          value={registerPassword}
+                          onChange={(e) => setRegisterPassword(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <Input 
+                          id="confirm-password" 
+                          type="password" 
+                          placeholder="••••••••" 
+                          value={registerConfirmPassword}
+                          onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">Create Account</Button>
+                    </form>
+                  </CardContent>
+                  
+                  <CardFooter className="flex flex-col space-y-4">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                      Already have an account?{" "}
+                      <button 
+                        onClick={() => setActiveTab("login")} 
+                        className="text-jobconnect-primary hover:underline"
+                      >
+                        Login
+                      </button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
