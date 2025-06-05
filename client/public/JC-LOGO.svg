@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 123.91 123.91">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #3d67b1;
+      }
+
+      .cls-2 {
+        font-family: SFProDisplay-Bold, 'SF Pro Display';
+        font-size: 72px;
+        font-weight: 700;
+      }
+
+      .cls-3 {
+        fill: none;
+        stroke: url(#linear-gradient);
+        stroke-miterlimit: 10;
+        stroke-width: 5px;
+      }
+
+      .cls-4 {
+        fill: #7562ab;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="0" y1="61.96" x2="123.91" y2="61.96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3d67b1"/>
+      <stop offset="1" stop-color="#7562ab"/>
+    </linearGradient>
+  </defs>
+  <g id="Layer_2-2" data-name="Layer 2">
+    <circle class="cls-3" cx="61.96" cy="61.96" r="59.46"/>
+    <text class="cls-2" transform="translate(16.22 86.57)"><tspan class="cls-4" x="0" y="0">J</tspan><tspan class="cls-1" x="40.18" y="0">C</tspan></text>
+  </g>
+</svg>
