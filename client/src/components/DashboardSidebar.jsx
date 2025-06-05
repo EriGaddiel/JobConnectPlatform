@@ -26,7 +26,7 @@ export function DashboardSidebar({ role = "jobseeker" }) {
   const navItems = getNavItems();
 
   return (
-    <div className="flex h-full w-64 flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
+    <div className="flex h-[100vh] w-64 flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <Logo />
       </div>
