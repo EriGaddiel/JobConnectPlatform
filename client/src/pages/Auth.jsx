@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import Navbar from "@/components/navbar";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -27,54 +26,63 @@ export default function Auth() {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
   
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast: sendToast } = useToast();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     
     // Frontend validation only - no actual auth implementation
     if (!loginEmail || !loginPassword) {
       toast.error("Please fill in all fields");
+      setLoading(false);
       return;
     }
     
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     // Simulate successful login
     toast.success("Login successful! Redirecting to dashboard...");
     
     // Redirect based on role
-    setTimeout(() => {
-      if (role === "employer") {
-        navigate("/employer/dashboard");
-      } else if (role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
-    }, 1500);
+    if (role === "employer") {
+      navigate("/employer/dashboard");
+    } else if (role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/dashboard");
+    }
+    setLoading(false);
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
+    setLoading(true);
     
     // Frontend validation only
     if (!registerName || !registerEmail || !registerPassword || !registerConfirmPassword) {
       toast.error("Please fill in all fields");
+      setLoading(false);
       return;
     }
     
     if (registerPassword !== registerConfirmPassword) {
-      sendToast({
-        variant: "destructive",
-        title: "Passwords do not match",
-        description: "Please make sure your passwords match."
+      toast.error("Passwords do not match", {
+        description: "Please make sure your passwords match.",
       });
+      setLoading(false);
       return;
     }
     
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     // Simulate successful registration
     toast.success("Account created! Please login with your credentials.");
     setActiveTab("login");
+    setLoading(false);
   };
 
   return (
@@ -151,13 +159,15 @@ export default function Auth() {
                           required 
                         />
                       </div>
-                      <Button type="submit" className="w-full">Login</Button>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Loading..." : "Login"}
+                      </Button>
                     </form>
                   </CardContent>
                   
                   <CardFooter className="flex flex-col space-y-4">
                     <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                      Don't have an account?{" "}
+                      Don&apos;t have an account?{" "}
                       <button 
                         onClick={() => setActiveTab("register")} 
                         className="text-jobconnect-primary hover:underline"
@@ -242,7 +252,9 @@ export default function Auth() {
                           required 
                         />
                       </div>
-                      <Button type="submit" className="w-full">Create Account</Button>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Loading..." : "Create Account"}
+                      </Button>
                     </form>
                   </CardContent>
                   

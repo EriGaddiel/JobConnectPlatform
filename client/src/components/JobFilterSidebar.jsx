@@ -10,7 +10,119 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, DollarSign, Clock, Building, X } from "lucide-react";
+import { MapPin, X } from "lucide-react";
+import { JOB_TYPES, EXPERIENCE_LEVELS, JOB_CATEGORIES } from "@/lib/constants";
+
+// Sub-component for displaying active filters
+function ActiveFiltersDisplay({ filters, onRemoveFilter, onUpdateFilter }) {
+  const getCategoryLabel = (value) => JOB_CATEGORIES.find(c => c.value === value)?.label;
+  const getJobTypeLabel = (id) => JOB_TYPES.find(t => t.id === id)?.label;
+  const getExperienceLevelLabel = (id) => EXPERIENCE_LEVELS.find(l => l.id === id)?.label;
+
+  const activeFilterCount = () => {
+    let count = 0;
+    if (filters.keyword) count++;
+    if (filters.location) count++;
+    if (filters.category !== "all") count++;
+    if (filters.jobType.length > 0) count += filters.jobType.length;
+    if (filters.experienceLevel.length > 0) count += filters.experienceLevel.length;
+    if (filters.remote) count++;
+    if (filters.salaryRange[0] > 0 || filters.salaryRange[1] < 200000) count++;
+    return count;
+  };
+
+  if (activeFilterCount() === 0) {
+    return null;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Active Filters</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-2">
+          {filters.keyword && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              {filters.keyword}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => onUpdateFilter("keyword", "")}
+                aria-label="Remove keyword filter"
+              />
+            </Badge>
+          )}
+
+          {filters.location && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              {filters.location}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => onUpdateFilter("location", "")}
+                aria-label="Remove location filter"
+              />
+            </Badge>
+          )}
+
+          {filters.category !== "all" && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              {getCategoryLabel(filters.category)}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => onRemoveFilter("category")}
+                aria-label="Remove category filter"
+              />
+            </Badge>
+          )}
+
+          {filters.jobType.map(typeId => (
+            <Badge key={typeId} variant="secondary" className="flex items-center gap-1">
+              {getJobTypeLabel(typeId)}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => onRemoveFilter("jobType", typeId)}
+                aria-label={`Remove ${getJobTypeLabel(typeId)} filter`}
+              />
+            </Badge>
+          ))}
+
+          {filters.experienceLevel.map(levelId => (
+            <Badge key={levelId} variant="secondary" className="flex items-center gap-1">
+              {getExperienceLevelLabel(levelId)}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => onRemoveFilter("experienceLevel", levelId)}
+                aria-label={`Remove ${getExperienceLevelLabel(levelId)} filter`}
+              />
+            </Badge>
+          ))}
+
+          {filters.remote && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Remote
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => onRemoveFilter("remote")}
+                aria-label="Remove remote filter"
+              />
+            </Badge>
+          )}
+
+          {(filters.salaryRange[0] > 0 || filters.salaryRange[1] < 200000) && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              ${filters.salaryRange[0].toLocaleString()} - ${filters.salaryRange[1].toLocaleString()}
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => onUpdateFilter("salaryRange", [0, 200000])}
+                aria-label="Remove salary range filter"
+              />
+            </Badge>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function JobFilterSidebar({ onFiltersChange, activeFilters = {} }) {
   const [filters, setFilters] = useState({
@@ -19,31 +131,10 @@ export function JobFilterSidebar({ onFiltersChange, activeFilters = {} }) {
     category: "all",
     jobType: [],
     experienceLevel: [],
-    salaryRange: [0, 200000],
+    salaryRange: [0, 200000], // Default salary range
     remote: false,
-    ...activeFilters
+    ...activeFilters // Initialize with any active filters passed as props
   });
-
-  const jobTypes = [
-    { id: "full-time", label: "Full-time" },
-    { id: "part-time", label: "Part-time" },
-    { id: "contract", label: "Contract" },
-    { id: "freelance", label: "Freelance" },
-    { id: "internship", label: "Internship" }
-  ];
-
-  const experienceLevels = [
-    { id: "entry", label: "Entry Level" },
-    { id: "mid", label: "Mid Level" },
-    { id: "senior", label: "Senior Level" },
-    { id: "executive", label: "Executive" }
-  ];
-
-  const categories = [
-    { value: "all", label: "All Jobs" },
-    { value: "formal", label: "Formal Employment" },
-    { value: "informal", label: "Informal Employment" }
-  ];
 
   const updateFilter = (key, value) => {
     const newFilters = { ...filters, [key]: value };
@@ -99,7 +190,7 @@ export function JobFilterSidebar({ onFiltersChange, activeFilters = {} }) {
     if (filters.jobType.length > 0) count += filters.jobType.length;
     if (filters.experienceLevel.length > 0) count += filters.experienceLevel.length;
     if (filters.remote) count++;
-    if (filters.salaryRange[0] > 0 || filters.salaryRange[1] < 200000) count++;
+    if (filters.salaryRange[0] > 0 || filters.salaryRange[1] < 200000) count++; // Check if salary range is not default
     return count;
   };
 
@@ -150,7 +241,7 @@ export function JobFilterSidebar({ onFiltersChange, activeFilters = {} }) {
               value={filters.category} 
               onValueChange={(value) => updateFilter("category", value)}
             >
-              {categories.map((category) => (
+              {JOB_CATEGORIES.map((category) => (
                 <div key={category.value} className="flex items-center space-x-2">
                   <RadioGroupItem value={category.value} id={category.value} />
                   <Label htmlFor={category.value}>{category.label}</Label>
@@ -164,7 +255,7 @@ export function JobFilterSidebar({ onFiltersChange, activeFilters = {} }) {
           {/* Job Type */}
           <div className="space-y-3">
             <Label>Job Type</Label>
-            {jobTypes.map((type) => (
+            {JOB_TYPES.map((type) => (
               <div key={type.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={type.id}
@@ -181,7 +272,7 @@ export function JobFilterSidebar({ onFiltersChange, activeFilters = {} }) {
           {/* Experience Level */}
           <div className="space-y-3">
             <Label>Experience Level</Label>
-            {experienceLevels.map((level) => (
+            {EXPERIENCE_LEVELS.map((level) => (
               <div key={level.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={level.id}
@@ -228,87 +319,11 @@ export function JobFilterSidebar({ onFiltersChange, activeFilters = {} }) {
         </CardContent>
       </Card>
 
-      {/* Active Filters */}
-      {getActiveFilterCount() > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Active Filters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {filters.keyword && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  {filters.keyword}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => updateFilter("keyword", "")}
-                  />
-                </Badge>
-              )}
-              
-              {filters.location && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  {filters.location}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => updateFilter("location", "")}
-                  />
-                </Badge>
-              )}
-
-              {filters.category !== "all" && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  {categories.find(c => c.value === filters.category)?.label}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeFilter("category")}
-                  />
-                </Badge>
-              )}
-
-              {filters.jobType.map(typeId => (
-                <Badge key={typeId} variant="secondary" className="flex items-center gap-1">
-                  {jobTypes.find(t => t.id === typeId)?.label}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeFilter("jobType", typeId)}
-                  />
-                </Badge>
-              ))}
-
-              {filters.experienceLevel.map(levelId => (
-                <Badge key={levelId} variant="secondary" className="flex items-center gap-1">
-                  {experienceLevels.find(l => l.id === levelId)?.label}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeFilter("experienceLevel", levelId)}
-                  />
-                </Badge>
-              ))}
-
-              {filters.remote && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Remote
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeFilter("remote")}
-                  />
-                </Badge>
-              )}
-
-              {(filters.salaryRange[0] > 0 || filters.salaryRange[1] < 200000) && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  ${filters.salaryRange[0].toLocaleString()} - ${filters.salaryRange[1].toLocaleString()}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => updateFilter("salaryRange", [0, 200000])}
-                  />
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <ActiveFiltersDisplay
+        filters={filters}
+        onRemoveFilter={removeFilter}
+        onUpdateFilter={updateFilter}
+      />
     </div>
   );
 }

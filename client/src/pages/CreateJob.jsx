@@ -18,6 +18,7 @@ export default function CreateJob() {
   const [formStep, setFormStep] = useState(1);
   const [jobCategory, setJobCategory] = useState("formal");
   const [customFields, setCustomFields] = useState([]);
+  const [loading, setLoading] = useState(false);
   
   const handleAddCustomField = () => {
     const newField = {
@@ -41,10 +42,16 @@ export default function CreateJob() {
     setCustomFields(customFields.filter(f => f.id !== id));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     toast.success("Job posted successfully!");
     navigate("/employer/jobs");
+    setLoading(false);
   };
 
   return (

@@ -74,7 +74,7 @@ export default function SavedJobs() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold">Saved Jobs</h1>
-              <p className="text-gray-500">Jobs you've saved for later</p>
+              <p className="text-gray-500">Jobs you&apos;ve saved for later</p>
             </div>
           </div>
         </header>
@@ -117,7 +117,7 @@ export default function SavedJobs() {
               <div className="mx-auto max-w-md">
                 <h3 className="text-xl font-bold mb-2">No Saved Jobs</h3>
                 <p className="text-gray-500 mb-6">
-                  You haven't saved any jobs yet. Browse jobs and click the save icon to keep track of interesting opportunities.
+                  You haven&apos;t saved any jobs yet. Browse jobs and click the save icon to keep track of interesting opportunities.
                 </p>
                 <Button asChild>
                   <a href="/jobs">Browse Jobs</a>

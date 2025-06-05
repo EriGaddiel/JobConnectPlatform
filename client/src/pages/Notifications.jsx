@@ -152,7 +152,7 @@ export default function Notifications() {
             <Card>
               <CardHeader>
                 <CardTitle>Unread Notifications</CardTitle>
-                <CardDescription>Notifications you haven't read yet</CardDescription>
+                <CardDescription>Notifications you haven&apos;t read yet</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
