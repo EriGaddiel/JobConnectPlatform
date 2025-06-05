@@ -1,29 +1,47 @@
 import js from "@eslint/js";
 import globals from "globals";
+import reactPlugin from "eslint-plugin-react"; // Renamed for clarity
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default [
   { ignores: ["dist"] },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ["**/*.{ts,tsx}"],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-    },
+    files: ["**/*.{js,jsx}"],
     plugins: {
+      react: reactPlugin, // Added react plugin
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
     },
+    languageOptions: {
+      ecmaVersion: 2020,
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true, // Enable JSX parsing
+        },
+      },
+    },
     rules: {
+      ...js.configs.recommended.rules,
+      ...reactPlugin.configs.recommended.rules, // Added react recommended rules
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-unused-vars": "off",
+      "no-unused-vars": "warn",
+      "react/react-in-jsx-scope": "off", // Not needed with modern React
+      "react/prop-types": "off", // Disable prop-types rule as this project doesn't use them
+    },
+    settings: {
+      react: {
+        version: "detect", // Automatically detect React version
+      },
     },
   }
-);
+];

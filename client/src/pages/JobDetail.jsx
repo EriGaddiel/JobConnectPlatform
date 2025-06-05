@@ -257,7 +257,7 @@ export default function JobDetail() {
                       <div>
                         <h3 className="text-lg font-semibold mb-3">Application Process</h3>
                         <p className="text-gray-600 dark:text-gray-300">
-                          To apply for this position, click the "Apply Now" button and submit the required application materials. Our team will review your application and reach out to qualified candidates for next steps.
+                          To apply for this position, click the &quot;Apply Now&quot; button and submit the required application materials. Our team will review your application and reach out to qualified candidates for next steps.
                         </p>
                         
                         <h4 className="font-medium mt-4 mb-2">Required Application Materials:</h4>

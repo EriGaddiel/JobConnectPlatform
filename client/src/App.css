@@ -1,8 +1,14 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem; /* Adjusted for smaller screens */
   text-align: center;
+}
+
+@media (min-width: 640px) { /* sm breakpoint */
+  #root {
+    padding: 2rem; /* Restore padding for larger screens */
+  }
 }
 
 .logo {
@@ -38,5 +44,5 @@
 }
 
 .read-the-docs {
-  color: #888;
+  color: hsl(var(--muted-foreground)); /* Updated to use CSS variable */
 }

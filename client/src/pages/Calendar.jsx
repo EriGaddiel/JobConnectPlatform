@@ -139,7 +139,7 @@ export default function Calendar() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Today's Schedule</CardTitle>
+                <CardTitle>Today&apos;s Schedule</CardTitle>
                 <CardDescription>
                   {selectedDate.toLocaleDateString('en-US', { 
                     weekday: 'long', 

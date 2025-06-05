@@ -331,7 +331,7 @@ export default function Settings() {
                         <div>
                           <h3 className="text-lg font-medium">Free Plan</h3>
                           <p className="text-sm text-gray-500">
-                            You're currently on the free plan. Upgrade for premium features.
+                            You&apos;re currently on the free plan. Upgrade for premium features.
                           </p>
                         </div>
                         <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Active</Badge>

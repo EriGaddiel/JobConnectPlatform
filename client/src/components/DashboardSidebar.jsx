@@ -4,57 +4,22 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { 
-  Home, 
-  Briefcase, 
-  User, 
-  Settings, 
-  Heart,
-  FileText,
-  BarChart3,
-  Building,
-  Users,
-  PlusCircle
-} from "lucide-react";
+  JOBSEEKER_NAV_ITEMS,
+  EMPLOYER_NAV_ITEMS,
+  ADMIN_NAV_ITEMS
+} from "@/lib/constants";
 
 export function DashboardSidebar({ role = "jobseeker" }) {
   const location = useLocation();
 
-  const jobseekerNavItems = [
-    { icon: Home, label: "Dashboard", href: "/dashboard" },
-    { icon: Briefcase, label: "Browse Jobs", href: "/jobs" },
-    { icon: Heart, label: "Saved Jobs", href: "/saved-jobs" },
-    { icon: FileText, label: "Applications", href: "/applications" },
-    { icon: User, label: "Profile", href: "/profile" },
-    { icon: Settings, label: "Settings", href: "/settings" },
-  ];
-
-  const employerNavItems = [
-    { icon: Home, label: "Dashboard", href: "/employer/dashboard" },
-    { icon: PlusCircle, label: "Post Job", href: "/post-job" },
-    { icon: Briefcase, label: "My Jobs", href: "/employer/jobs" },
-    { icon: Users, label: "Applications", href: "/employer/applications" },
-    { icon: BarChart3, label: "Analytics", href: "/employer/analytics" },
-    { icon: Building, label: "Company", href: "/employer/company" },
-    { icon: Settings, label: "Settings", href: "/employer/settings" },
-  ];
-
-  const adminNavItems = [
-    { icon: Home, label: "Dashboard", href: "/admin/dashboard" },
-    { icon: Users, label: "Users", href: "/admin/users" },
-    { icon: Briefcase, label: "Jobs", href: "/admin/jobs" },
-    { icon: Building, label: "Companies", href: "/admin/companies" },
-    { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
-  ];
-
   const getNavItems = () => {
     switch (role) {
       case "employer":
-        return employerNavItems;
+        return EMPLOYER_NAV_ITEMS;
       case "admin":
-        return adminNavItems;
+        return ADMIN_NAV_ITEMS;
       default:
-        return jobseekerNavItems;
+        return JOBSEEKER_NAV_ITEMS;
     }
   };
 
