@@ -157,11 +157,12 @@ jobSchema.pre('save', async function(next) {
             if (companyDoc) {
                 this.companyName = companyDoc.name;
                 this.companyLogo = companyDoc.logo || ''; // Ensure logo is at least an empty string
-            } else if (this.isNew) { // Only throw error if it's a new job and company not found
-                return next(new Error(`Company with ID ${this.company} not found.`));
+            } else { // If companyDoc is not found for either new or existing job (on company field modification)
+                return next(new Error(`Company with ID ${this.company} not found. Cannot save job.`));
             }
         } catch (error) {
-            return next(error);
+            console.error("Error in Job pre-save hook while fetching company:", error); // Log specific error
+            return next(error); // Propagate error
         }
     }
     // Basic validation for salary range

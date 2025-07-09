@@ -235,12 +235,27 @@ export const deleteCompany = async (req, res) => {
         // TODO: Add more robust checks: e.g., cannot delete if active jobs, or reassign jobs.
         // For now, simple deletion by Admin.
 
-        await User.updateMany({ company: companyId }, { $unset: { company: "" } }); // Unlink users
-        // await Job.deleteMany({ company: companyId }); // Delete associated jobs - handle carefully
+        // Handle jobs and applications associated with this company
+        const jobsToDelete = await Job.find({ company: companyId }).select('_id');
+        if (jobsToDelete.length > 0) {
+            const jobIdsToDelete = jobsToDelete.map(job => job._id);
 
-        await company.deleteOne(); // Using deleteOne instance method
+            // Delete applications for these jobs
+            await Application.deleteMany({ job: { $in: jobIdsToDelete } });
 
-        res.status(200).json({ message: "Company deleted successfully." });
+            // Remove these jobs from users' savedJobs arrays
+            await User.updateMany({ savedJobs: { $in: jobIdsToDelete } }, { $pull: { savedJobs: { $in: jobIdsToDelete } } });
+
+            // Delete the jobs themselves
+            await Job.deleteMany({ company: companyId });
+        }
+
+        // Unlink users from this company (users who had this company set in their profile)
+        await User.updateMany({ company: companyId }, { $unset: { company: "" } });
+
+        await company.deleteOne();
+
+        res.status(200).json({ message: "Company, its associated jobs, applications, and user links have been deleted successfully." });
 
     } catch (error) {
         console.error("Error deleting company:", error.message);
