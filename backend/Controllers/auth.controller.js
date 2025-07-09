@@ -36,8 +36,8 @@ export const signup = async (req, res) => {
             return res.status(400).json({ error: "Email is already taken" });
         }
 
-        if (password.length < 8) { // Updated to 8 to match user.model.js schema
-            return res.status(400).json({ error: "Password must be at least 8 characters long" });
+        if (password.length < 6) { // Consider increasing to 8 based on new schema
+            return res.status(400).json({ error: "Password must be at least 6 characters long" });
         }
 
         // const salt = await bcrypt.genSalt(12); // Salt generation is handled by pre-save hook in user.model.js

@@ -84,7 +84,7 @@ export default function JobDetail() {
     const applicationFields = [];
 
     // Construct applicationFields from form data based on job.applicationRequirements
-    (job?.applicationRequirements || []).forEach((req, index) => { // Added optional chaining and fallback
+    job.applicationRequirements.forEach((req, index) => {
         const fieldName = req.name; // Use the actual name of the requirement
         const fieldType = req.type;
         let value;

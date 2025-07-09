@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SearchBar } from "@/components/SearchBar";
 import Navbar from "@/components/navbar";
 import { Footer } from "@/components/footer";
-// Removed duplicate block of imports that was here
+
+export default function JobListings() {
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";

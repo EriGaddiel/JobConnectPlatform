@@ -3,26 +3,10 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { useEffect } from "react"; // Import useEffect
 
-export function SearchBar({
-  placeholder = "Search for jobs...",
-  onSearch,
-  className = "",
-  initialQuery = "",
-  initialLocation = ""
-}) {
-  const [query, setQuery] = useState(initialQuery);
-  const [location, setLocation] = useState(initialLocation);
-
-  // Update internal state if initial props change (e.g., due to URL params)
-  useEffect(() => {
-    setQuery(initialQuery);
-  }, [initialQuery]);
-
-  useEffect(() => {
-    setLocation(initialLocation);
-  }, [initialLocation]);
+export function SearchBar({ placeholder = "Search for jobs...", onSearch, className = "" }) {
+  const [query, setQuery] = useState("");
+  const [location, setLocation] = useState("");
 
   const handleSearch = (e) => {
     e.preventDefault();
