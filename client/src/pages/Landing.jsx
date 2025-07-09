@@ -6,8 +6,6 @@ import { TestimonialCard } from "@/components/TestimonialCard";
 import { JobCard } from "@/components/JobCard";
 import Navbar from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Link } from "react-router-dom";
-
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/SearchBar";
 import { FeatureCard } from "@/components/FeatureCard";
@@ -15,9 +13,9 @@ import { TestimonialCard } from "@/components/TestimonialCard";
 import { JobCard } from "@/components/JobCard";
 import Navbar from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getAllJobs } from "@/services/api"; // Assuming a way to fetch featured jobs
+import { getAllJobs } from "@/services/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Building, Users, TrendingUp, Search, UserPlus, Edit, Award, Lightbulb, Zap, ShieldCheck, Palette, ShoppingBag, Hammer, Code } from "lucide-react"; // Added more icons
 
@@ -34,11 +32,22 @@ export default function Landing() {
   // Fetch featured jobs
   const { data: featuredJobsData, isLoading: isLoadingFeaturedJobs, isError: isErrorFeaturedJobs } = useQuery({
     queryKey: ['featuredJobs'],
-    // Simulate fetching featured jobs: get newest 4 open jobs
-    queryFn: () => getAllJobs({ limit: 4, status: 'open', sortBy: 'createdAt', sortOrder: 'desc' }).then(res => res.data.jobs),
+    queryFn: async () => {
+      try {
+        const response = await getAllJobs({ limit: 4, status: 'open', sortBy: 'createdAt', sortOrder: 'desc' });
+        if (response && response.data && Array.isArray(response.data.jobs)) {
+          return response.data.jobs;
+        }
+        console.warn("Featured jobs API response was not in the expected format:", response);
+        return []; // Return empty array on unexpected structure
+      } catch (apiError) {
+        console.error("Error fetching featured jobs in Landing.jsx:", apiError.response?.data?.error || apiError.message);
+        throw apiError; // Re-throw for React Query to handle (isError will be true)
+      }
+    },
   });
 
-  const featuredJobs = featuredJobsData || [];
+  const featuredJobs = featuredJobsData || []; // Fallback remains useful
 
   // Stats data - these should ideally come from an API
   const platformStats = [
