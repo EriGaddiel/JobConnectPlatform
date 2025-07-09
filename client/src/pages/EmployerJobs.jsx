@@ -123,10 +123,11 @@ export default function EmployerJobs() {
         )}
 
         {!isLoading && !isError && jobs.length === 0 && (
-          <div className="text-center py-10">
-            <Briefcase size={48} className="mx-auto text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold">No Jobs Posted Yet</h2>
-            <p className="text-gray-500 mb-6">Click "Post New Job" to get started.</p>
+          <div className="text-center py-16"> {/* Increased padding */}
+            <Briefcase size={52} className="mx-auto text-gray-400 dark:text-gray-500 mb-6" strokeWidth={1.5}/>
+            <h2 className="text-2xl font-semibold mb-2">No Jobs Posted Yet</h2>
+            <p className="text-muted-foreground mb-6">Click the "Post New Job" button to create your first job listing.</p>
+            {/* The "Post New Job" button is already in the header, so not strictly needed here unless desired */}
           </div>
         )}
 

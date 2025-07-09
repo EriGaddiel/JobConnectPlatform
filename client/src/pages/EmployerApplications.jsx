@@ -171,11 +171,11 @@ export default function EmployerApplications() {
                 </div>
               )}
               {!isLoadingApplications && !isError && applications.length === 0 && (
-                <div className="text-center py-10">
-                  <Users size={48} className="mx-auto text-gray-400 mb-4" />
-                  <h2 className="text-xl font-semibold">No Applications Found</h2>
-                  <p className="text-gray-500">
-                    {applicationStatusFilter === 'all' ? "No applications yet for this job." : "No applications match the current status filter."}
+                <div className="text-center py-16"> {/* Increased padding */}
+                  <FileTextIcon size={52} className="mx-auto text-gray-400 dark:text-gray-500 mb-6" strokeWidth={1.5}/>
+                  <h2 className="text-2xl font-semibold mb-2">No Applications Found</h2>
+                  <p className="text-muted-foreground">
+                    {applicationStatusFilter === 'all' ? "There are currently no applications for this job." : "No applications match the selected status filter."}
                   </p>
                 </div>
               )}

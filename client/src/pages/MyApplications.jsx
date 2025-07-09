@@ -164,11 +164,11 @@ export default function MyApplications() {
             )}
 
             {!isLoading && !isError && applications.length === 0 && (
-              <div className="text-center py-10">
-                <FileTextIcon size={48} className="mx-auto text-gray-400 mb-4" />
-                <h2 className="text-xl font-semibold">No Applications Found</h2>
-                <p className="text-gray-500 mb-6">
-                    {activeTabValue === 'all' ? "You haven't applied for any jobs yet." : "No applications match the current filter."}
+              <div className="text-center py-16"> {/* Increased padding */}
+                <Briefcase size={52} className="mx-auto text-gray-400 dark:text-gray-500 mb-6" strokeWidth={1.5}/>
+                <h2 className="text-2xl font-semibold mb-2">No Applications Found</h2>
+                <p className="text-muted-foreground mb-6">
+                    {activeTabValue === 'all' ? "You haven't applied for any jobs yet. Start exploring!" : "No applications match the current filter criteria."}
                 </p>
                 {activeTabValue === 'all' &&
                     <Button asChild>

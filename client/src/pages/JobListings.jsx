@@ -241,9 +241,16 @@ export default function JobListings() {
               )}
 
               {!isLoading && !isError && jobs.length === 0 && (
-                <div className="text-center py-10">
-                  <h3 className="text-xl font-semibold">No jobs found</h3>
-                  <p className="text-gray-500">Try adjusting your search or filters.</p>
+                <div className="text-center py-16"> {/* Increased padding */}
+                  <Search className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500 mb-6" strokeWidth={1.5} />
+                  <h3 className="text-2xl font-semibold mb-2">No Jobs Found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    We couldn't find any jobs matching your current search and filters.
+                    <br />
+                    Try adjusting your criteria or broadening your search.
+                  </p>
+                  {/* Example: Button to clear filters - requires clearFilters function */}
+                  {/* <Button variant="outline" onClick={() => console.log('Clear filters clicked')}>Clear Filters</Button> */}
                 </div>
               )}
 

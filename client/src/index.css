@@ -14,11 +14,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    --primary: 210 79% 51%;
-    --primary-foreground: 0 0% 100%;
+    /* Updated to match jobconnect.primary: #1E88E5 */
+    --primary: 207 83% 51%;
+    --primary-foreground: 210 20% 98%; /* Ensure high contrast for primary buttons, white-ish */
 
-    --secondary: 174 60% 41%;
-    --secondary-foreground: 0 0% 100%;
+    /* Updated to match jobconnect.secondary: #26A69A */
+    --secondary: 173 62% 40%;
+    --secondary-foreground: 210 20% 98%; /* Ensure high contrast, white-ish */
 
     --muted: 210 20% 94%;
     --muted-foreground: 215 25% 35%; /* Darkened for better contrast */
@@ -55,11 +57,13 @@
     --popover: 215 28% 17%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 210 79% 51%;
-    --primary-foreground: 0 0% 100%;
+    /* Updated to match jobconnect.primary: #1E88E5 */
+    --primary: 207 83% 51%;
+    --primary-foreground: 210 20% 98%; /* Existing light foreground should work */
 
-    --secondary: 174 60% 41%;
-    --secondary-foreground: 0 0% 100%;
+    /* Updated to match jobconnect.secondary: #26A69A */
+    --secondary: 173 62% 40%;
+    --secondary-foreground: 210 20% 98%; /* Existing light foreground should work */
 
     --muted: 217 33% 25%;
     --muted-foreground: 215 20% 75%; /* Lightened for better contrast */
