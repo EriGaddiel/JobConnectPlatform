@@ -1,5 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,145 +12,209 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { StarRating } from "@/components/StarRating";
-import { FeatureCard } from "@/components/FeatureCard";
-import { Briefcase, Calendar, GraduationCap, Mail, MapPin, Phone, Star, User } from "lucide-react";
+import { Switch } from "@/components/ui/switch"; // For settings
+// import { StarRating } from "@/components/StarRating"; // Assuming this exists if needed for reviews
+// import { FeatureCard } from "@/components/FeatureCard"; // For profile strength suggestions
+import { Briefcase, Calendar, GraduationCap, Mail, MapPin, Phone, Star, User, PlusCircle, Trash2, Edit3, Save, XCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateUserProfile as apiUpdateUserProfile } from "@/services/api";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Zod schemas for nested arrays
+const educationSchema = z.object({
+  _id: z.string().optional(), // For existing items
+  degree: z.string().min(1, "Degree is required"),
+  institution: z.string().min(1, "Institution is required"),
+  period: z.string().optional(),
+  description: z.string().optional(),
+});
+const experienceSchema = z.object({
+  _id: z.string().optional(),
+  position: z.string().min(1, "Position is required"),
+  company: z.string().min(1, "Company is required"),
+  period: z.string().optional(),
+  description: z.string().optional(),
+});
+const certificationSchema = z.object({
+  _id: z.string().optional(),
+  name: z.string().min(1, "Certification name is required"),
+  issuer: z.string().min(1, "Issuer is required"),
+  date: z.string().optional(), // Could be date type if date picker is used
+  credentialId: z.string().optional(),
+  credentialURL: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
+// Main profile schema
+const userProfileSchema = z.object({
+  fullName: z.string().min(2, "Full name must be at least 2 characters."),
+  username: z.string().min(3, "Username must be at least 3 characters."),
+  email: z.string().email("Invalid email address."),
+  // Password change fields - handled separately or as part of a different form
+  // currentPassword: z.string().optional(),
+  // newPassword: z.string().optional(),
+  bio: z.string().max(500, "Bio cannot exceed 500 characters.").optional(),
+  location: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  title: z.string().optional(), // Job seeker's professional title
+  profilePicture: z.string().url("Must be a valid URL for profile picture.").optional().or(z.literal("")),
+  resume: z.string().url("Must be a valid URL for resume.").optional().or(z.literal("")), // URL to resume
+  portfolioURL: z.string().url("Must be a valid URL for portfolio.").optional().or(z.literal("")),
+  skills: z.array(z.string()).optional().default([]), // Array of strings
+  education: z.array(educationSchema).optional().default([]),
+  experience: z.array(experienceSchema).optional().default([]),
+  certifications: z.array(certificationSchema).optional().default([]),
+  // Settings
+  profileVisibility: z.enum(["public", "privateToEmployers", "private"]).optional(),
+  contactInfoVisibility: z.enum(["public", "connections", "private"]).optional(), // Adjust if different enums
+  jobAlertsEnabled: z.boolean().optional(),
+});
+
 
 export default function UserProfile() {
+  const { user, isLoading: isLoadingAuthUser, refetchUser } = useAuth();
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  
-  const [userProfile, setUserProfile] = useState({
-    name: "John Smith",
-    title: "Web Developer",
-    location: "New York, NY",
-    email: "john.smith@example.com",
-    phone: "+1 (555) 123-4567",
-    about: "Passionate web developer with 5+ years of experience in frontend and backend development. Proficient in React, TypeScript, Node.js and various modern web technologies.",
-    education: [
-      {
-        id: 1,
-        degree: "BSc Computer Science",
-        institution: "New York University",
-        period: "2016 - 2020"
-      },
-      {
-        id: 2,
-        degree: "Web Development Bootcamp",
-        institution: "Coding Academy",
-        period: "2015 - 2016"
-      }
-    ],
-    experience: [
-      {
-        id: 1,
-        position: "Senior Web Developer",
-        company: "TechCorp Inc",
-        period: "2022 - Present",
-        description: "Lead developer for the company's main product, managing a team of 3 developers and implementing new features."
-      },
-      {
-        id: 2,
-        position: "Web Developer",
-        company: "Digital Solutions",
-        period: "2020 - 2022",
-        description: "Developed and maintained client websites using React, Node.js, and MongoDB."
-      },
-      {
-        id: 3,
-        position: "Junior Developer",
-        company: "StartUp Tech",
-        period: "2018 - 2020",
-        description: "Assisted in developing web applications and fixing bugs."
-      }
-    ],
-    skills: [
-      "React", "JavaScript", "TypeScript", "Node.js", "HTML5", "CSS3", 
-      "MongoDB", "Express.js", "REST API", "Git", "UI/UX Design", "Responsive Design"
-    ],
-    certifications: [
-      {
-        id: 1,
-        name: "AWS Certified Developer",
-        issuer: "Amazon Web Services",
-        date: "2021"
-      },
-      {
-        id: 2,
-        name: "React Developer Certification",
-        issuer: "Meta",
-        date: "2020"
-      }
-    ]
+  const [currentSkill, setCurrentSkill] = useState(""); // For adding skills
+
+  const { control, register, handleSubmit, reset, setValue, getValues, formState: { errors, isSubmitting, isDirty } } = useForm({
+    resolver: zodResolver(userProfileSchema),
+    defaultValues: user || {}, // Initialize with user data from context
   });
 
-  const handleEdit = () => {
-    setIsEditing(true);
+  // Field array hooks
+  const { fields: educationFields, append: appendEducation, remove: removeEducation } = useFieldArray({ control, name: "education" });
+  const { fields: experienceFields, append: appendExperience, remove: removeExperience } = useFieldArray({ control, name: "experience" });
+  const { fields: certificationFields, append: appendCertification, remove: removeCertification } = useFieldArray({ control, name: "certifications" });
+  const skillsArray = watch('skills', user?.skills || []); // Watch skills for dynamic rendering
+
+  useEffect(() => {
+    if (user) {
+      reset({ // Reset form with potentially more complete data from context/API
+        ...user,
+        skills: user.skills || [],
+        education: user.education || [],
+        experience: user.experience || [],
+        certifications: user.certifications || [],
+      });
+    }
+  }, [user, reset]);
+
+  const profileUpdateMutation = useMutation({
+    mutationFn: apiUpdateUserProfile,
+    onSuccess: (data) => {
+      toast.success("Profile updated successfully!");
+      refetchUser(); // Refetch user in AuthContext
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || "Failed to update profile.");
+    }
+  });
+
+  const onSubmit = (formData) => {
+    // Filter out empty strings for optional URL fields to avoid sending them
+    const payload = { ...formData };
+    if (payload.profilePicture === "") delete payload.profilePicture;
+    if (payload.resume === "") delete payload.resume;
+    if (payload.portfolioURL === "") delete payload.portfolioURL;
+    payload.certifications = payload.certifications?.map(cert => ({
+        ...cert,
+        credentialURL: cert.credentialURL === "" ? undefined : cert.credentialURL
+    }));
+
+    profileUpdateMutation.mutate(payload);
   };
 
-  const handleSave = () => {
-    // In a real application, you would save the updated profile data here
-    setIsEditing(false);
+  const handleAddSkill = () => {
+    if (currentSkill.trim() && !skillsArray.includes(currentSkill.trim())) {
+      setValue("skills", [...skillsArray, currentSkill.trim()], { shouldDirty: true });
+      setCurrentSkill("");
+    }
   };
+  const handleRemoveSkill = (skillToRemove) => {
+    setValue("skills", skillsArray.filter(skill => skill !== skillToRemove), { shouldDirty: true });
+  };
+
+  if (isLoadingAuthUser && !user) {
+     return ( // Full page skeleton if user data isn't loaded yet
+        <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+            <DashboardSidebar role={user?.role || "jobseeker"} /> {/* Pass role if available */}
+            <div className="flex-1 p-6 space-y-4">
+                <Skeleton className="h-10 w-1/3" /> <Skeleton className="h-6 w-1/4" />
+                <Skeleton className="h-40 w-full rounded-lg" />
+                <div className="grid grid-cols-3 gap-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
+                <Skeleton className="h-64 w-full rounded-lg" />
+            </div>
+        </div>
+     );
+  }
+
+  if (!user) { // Should be handled by ProtectedRoute, but as a fallback
+    return <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 items-center justify-center"><p>Please log in to view your profile.</p></div>;
+  }
+
+  // Determine role for sidebar, default to jobSeeker if somehow undefined
+  const userRoleForSidebar = user?.role || 'jobSeeker';
+
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardSidebar role="jobseeker" />
+      <DashboardSidebar role={userRoleForSidebar} />
       
-      <div className="flex-1 p-6">
-        <header className="mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">My Profile</h1>
-              <p className="text-gray-500">Manage your personal information and career details</p>
-            </div>
-            
+      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 p-6">
+        <header className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">My Profile</h1>
+            <p className="text-gray-500">Manage your personal information and career details</p>
+          </div>
+          <div>
             {!isEditing ? (
-              <Button onClick={handleEdit}>Edit Profile</Button>
+              <Button type="button" onClick={() => setIsEditing(true)}><Edit3 className="mr-2 h-4 w-4"/>Edit Profile</Button>
             ) : (
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                <Button onClick={handleSave}>Save Changes</Button>
+                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); reset(user); }} disabled={isSubmitting}><XCircle className="mr-2 h-4 w-4"/>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting || !isDirty}><Save className="mr-2 h-4 w-4"/>{isSubmitting ? "Saving..." : "Save Changes"}</Button>
               </div>
             )}
           </div>
         </header>
 
+        {/* Profile Header / Avatar section */}
         <div className="mb-8">
           <Card>
-            <div className="bg-jobconnect-primary h-32 rounded-t-lg"></div>
+            <div className="bg-gradient-to-r from-jobconnect-primary to-jobconnect-secondary h-32 rounded-t-lg"></div>
             <CardContent className="p-6 pt-0 -mt-16">
               <div className="flex flex-col md:flex-row md:items-end gap-6">
-                <Avatar className="w-32 h-32 border-4 border-white dark:border-gray-900">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="text-4xl">JS</AvatarFallback>
-                </Avatar>
-                
+                 <div className="relative">
+                    <Avatar className="w-32 h-32 border-4 border-background">
+                        <AvatarImage src={watch("profilePicture") || user.profilePicture || undefined} />
+                        <AvatarFallback className="text-4xl">{(user.fullName || user.username || "U").substring(0,2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    {isEditing && (
+                        <div className="mt-2">
+                            <Label htmlFor="profilePicture" className="text-xs">Profile Picture URL</Label>
+                            <Input id="profilePicture" {...register("profilePicture")} placeholder="https://example.com/image.png" />
+                            {errors.profilePicture && <p className="text-red-500 text-sm mt-1">{errors.profilePicture.message}</p>}
+                        </div>
+                    )}
+                 </div>
                 <div className="flex-1">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                     <div>
-                      <h2 className="text-2xl font-bold">{userProfile.name}</h2>
-                      <p className="text-gray-500">{userProfile.title}</p>
+                      {isEditing ? <Input className="text-2xl font-bold" {...register("fullName")} placeholder="Your Full Name"/> : <h2 className="text-2xl font-bold">{user.fullName || "Your Name"}</h2>}
+                      {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName.message}</p>}
+
+                      {isEditing ? <Input {...register("title")} placeholder="Your Professional Title (e.g., Web Developer)"/> : <p className="text-gray-500 dark:text-gray-400">{user.title || "Your Professional Title"}</p>}
+                      {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <StarRating rating={4.5} />
-                      <span className="text-sm text-gray-500">(12 reviews)</span>
-                    </div>
+                    {/* StarRating and reviews count can be added back if review system for users is implemented */}
                   </div>
-                  
-                  <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <MapPin size={16} />
-                      <span>{userProfile.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Mail size={16} />
-                      <span>{userProfile.email}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Phone size={16} />
-                      <span>{userProfile.phone}</span>
-                    </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1"><MapPin size={16} /> {isEditing ? <Input {...register("location")} placeholder="City, State"/> : (user.location || "Location not set")}</div>
+                    <div className="flex items-center gap-1"><Mail size={16} /> {isEditing ? <Input type="email" {...register("email")} placeholder="your@email.com"/> : (user.email || "Email not set")} {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}</div>
+                    <div className="flex items-center gap-1"><Phone size={16} /> {isEditing ? <Input {...register("phoneNumber")} placeholder="(123) 456-7890"/> : (user.phoneNumber || "Phone not set")}</div>
                   </div>
                 </div>
               </div>
@@ -156,7 +223,7 @@ export default function UserProfile() {
         </div>
 
         <Tabs defaultValue="about" className="mb-6">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6">
             <TabsTrigger value="about">About</TabsTrigger>
             <TabsTrigger value="experience">Experience</TabsTrigger>
             <TabsTrigger value="education">Education</TabsTrigger>
@@ -166,299 +233,183 @@ export default function UserProfile() {
           
           <TabsContent value="about">
             <Card>
-              <CardHeader>
-                <CardTitle>About Me</CardTitle>
-                <CardDescription>Tell employers about yourself and your career</CardDescription>
-              </CardHeader>
+              <CardHeader><CardTitle>About Me</CardTitle><CardDescription>Tell employers about yourself and your career aspirations.</CardDescription></CardHeader>
               <CardContent>
-                {isEditing ? (
-                  <Textarea 
-                    className="min-h-[200px]"
-                    defaultValue={userProfile.about}
-                    onChange={(e) => setUserProfile({...userProfile, about: e.target.value})}
-                  />
-                ) : (
-                  <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{userProfile.about}</p>
+                {isEditing ? (<Textarea className="min-h-[150px]" {...register("bio")} placeholder="Write a brief summary about yourself..."/>) : (<p className="text-muted-foreground whitespace-pre-wrap">{user.bio || "No bio provided."}</p>)}
+                {errors.bio && <p className="text-red-500 text-sm mt-1">{errors.bio.message}</p>}
+                {isEditing && user.role === 'jobSeeker' && (
+                    <div className="mt-4 space-y-2">
+                        <div><Label htmlFor="resume">Resume URL</Label><Input id="resume" {...register("resume")} placeholder="https://example.com/resume.pdf"/>{errors.resume && <p className="text-red-500 text-sm mt-1">{errors.resume.message}</p>}</div>
+                        <div><Label htmlFor="portfolioURL">Portfolio URL</Label><Input id="portfolioURL" {...register("portfolioURL")} placeholder="https://github.com/yourusername or your personal site"/>{errors.portfolioURL && <p className="text-red-500 text-sm mt-1">{errors.portfolioURL.message}</p>}</div>
+                    </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
           
+          {/* Experience Section */}
           <TabsContent value="experience">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Work Experience</CardTitle>
-                  <CardDescription>Your professional history</CardDescription>
-                </div>
-                
-                {isEditing && (
-                  <Button size="sm">Add Experience</Button>
-                )}
+                <div><CardTitle>Work Experience</CardTitle><CardDescription>Your professional history.</CardDescription></div>
+                {isEditing && <Button type="button" size="sm" variant="outline" onClick={() => appendExperience({ position: "", company: "", period: "", description: "" })}><PlusCircle className="mr-2 h-4 w-4"/>Add Experience</Button>}
               </CardHeader>
               <CardContent className="space-y-6">
-                {userProfile.experience.map((exp) => (
-                  <div key={exp.id} className="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-6 last:pb-0">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium">{exp.position}</h3>
-                        <p className="text-gray-500">{exp.company}</p>
-                      </div>
-                      <Badge variant="outline">{exp.period}</Badge>
-                    </div>
-                    
-                    {isEditing ? (
-                      <Textarea 
-                        className="mt-2"
-                        defaultValue={exp.description}
-                      />
-                    ) : (
-                      <p className="mt-2 text-gray-600 dark:text-gray-300">{exp.description}</p>
-                    )}
-                    
-                    {isEditing && (
-                      <div className="flex gap-2 mt-2">
-                        <Button size="sm" variant="ghost">Edit</Button>
-                        <Button size="sm" variant="destructive">Delete</Button>
-                      </div>
-                    )}
+                {experienceFields.map((field, index) => (
+                  <div key={field.id} className="border p-4 rounded-lg space-y-2 relative">
+                    {isEditing && <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-red-500 hover:text-red-700" onClick={() => removeExperience(index)}><Trash2 className="h-4 w-4"/></Button>}
+                    {isEditing ? (<Input {...register(`experience.${index}.position`)} placeholder="Position"/>) : (<h3 className="text-lg font-medium">{field.position || user.experience?.[index]?.position}</h3>)}
+                    {errors.experience?.[index]?.position && <p className="text-red-500 text-sm">{errors.experience[index].position.message}</p>}
+                    {isEditing ? (<Input {...register(`experience.${index}.company`)} placeholder="Company Name"/>) : (<p className="text-muted-foreground">{field.company || user.experience?.[index]?.company}</p>)}
+                     {errors.experience?.[index]?.company && <p className="text-red-500 text-sm">{errors.experience[index].company.message}</p>}
+                    {isEditing ? (<Input {...register(`experience.${index}.period`)} placeholder="e.g., Jan 2020 - Present"/>) : (<Badge variant="outline" className="mb-1">{field.period || user.experience?.[index]?.period}</Badge>)}
+                    {isEditing ? (<Textarea {...register(`experience.${index}.description`)} placeholder="Description of your role and achievements." className="text-sm"/>) : (<p className="text-sm text-muted-foreground">{field.description || user.experience?.[index]?.description}</p>)}
                   </div>
                 ))}
+                {!isEditing && user.experience?.length === 0 && <p className="text-muted-foreground">No work experience added yet.</p>}
               </CardContent>
             </Card>
           </TabsContent>
-          
+
+          {/* Education Section */}
           <TabsContent value="education">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Education & Certifications</CardTitle>
-                  <CardDescription>Your academic background and professional certifications</CardDescription>
-                </div>
-                
-                {isEditing && (
-                  <div className="flex gap-2">
-                    <Button size="sm">Add Education</Button>
-                    <Button size="sm">Add Certification</Button>
-                  </div>
-                )}
+                <div><CardTitle>Education</CardTitle><CardDescription>Your academic background.</CardDescription></div>
+                {isEditing && <Button type="button" size="sm" variant="outline" onClick={() => appendEducation({ degree: "", institution: "", period: "", description: "" })}><PlusCircle className="mr-2 h-4 w-4"/>Add Education</Button>}
               </CardHeader>
-              <CardContent>
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-4">Education</h3>
-                  <div className="space-y-4">
-                    {userProfile.education.map((edu) => (
-                      <div key={edu.id} className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border rounded-lg">
-                        <div className="flex gap-4">
-                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
-                            <GraduationCap className="h-6 w-6 text-jobconnect-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{edu.degree}</h4>
-                            <p className="text-gray-500">{edu.institution}</p>
-                          </div>
+              <CardContent className="space-y-4">
+                {educationFields.map((field, index) => (
+                  <div key={field.id} className="border p-4 rounded-lg space-y-2 relative">
+                    {isEditing && <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-red-500 hover:text-red-700" onClick={() => removeEducation(index)}><Trash2 className="h-4 w-4"/></Button>}
+                     <div className="flex items-center gap-2">
+                        <GraduationCap className="h-6 w-6 text-primary flex-shrink-0" />
+                        <div className="flex-grow">
+                            {isEditing ? (<Input {...register(`education.${index}.degree`)} placeholder="Degree/Qualification"/>) : (<h4 className="font-medium">{field.degree || user.education?.[index]?.degree}</h4>)}
+                            {errors.education?.[index]?.degree && <p className="text-red-500 text-sm">{errors.education[index].degree.message}</p>}
+                            {isEditing ? (<Input {...register(`education.${index}.institution`)} placeholder="Institution Name"/>) : (<p className="text-sm text-muted-foreground">{field.institution || user.education?.[index]?.institution}</p>)}
+                            {errors.education?.[index]?.institution && <p className="text-red-500 text-sm">{errors.education[index].institution.message}</p>}
                         </div>
-                        
-                        <div className="mt-2 md:mt-0">
-                          <Badge variant="outline">{edu.period}</Badge>
-                          
-                          {isEditing && (
-                            <div className="flex gap-2 mt-2">
-                              <Button size="sm" variant="ghost">Edit</Button>
-                              <Button size="sm" variant="destructive">Delete</Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                        {isEditing ? (<Input {...register(`education.${index}.period`)} placeholder="e.g., 2016 - 2020" className="w-auto"/>) : (<Badge variant="outline">{field.period || user.education?.[index]?.period}</Badge>)}
+                     </div>
+                     {isEditing ? (<Textarea {...register(`education.${index}.description`)} placeholder="Optional description or achievements." className="text-sm"/>) : ( (field.description || user.education?.[index]?.description) && <p className="text-sm text-muted-foreground mt-1 pl-8">{field.description || user.education?.[index]?.description}</p>)}
                   </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Certifications</h3>
-                  <div className="space-y-4">
-                    {userProfile.certifications.map((cert) => (
-                      <div key={cert.id} className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border rounded-lg">
-                        <div className="flex gap-4">
-                          <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
-                            <Star className="h-6 w-6 text-jobconnect-secondary" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{cert.name}</h4>
-                            <p className="text-gray-500">{cert.issuer}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-2 md:mt-0">
-                          <Badge variant="outline">{cert.date}</Badge>
-                          
-                          {isEditing && (
-                            <div className="flex gap-2 mt-2">
-                              <Button size="sm" variant="ghost">Edit</Button>
-                              <Button size="sm" variant="destructive">Delete</Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
+                 {!isEditing && user.education?.length === 0 && <p className="text-muted-foreground">No education details added yet.</p>}
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="skills">
+
+          {/* Skills Section */}
+           <TabsContent value="skills">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Skills & Expertise</CardTitle>
-                  <CardDescription>Showcase your professional capabilities</CardDescription>
-                </div>
-                
-                {isEditing && (
-                  <Button size="sm">Add Skill</Button>
-                )}
-              </CardHeader>
+              <CardHeader><CardTitle>Skills & Expertise</CardTitle><CardDescription>Showcase your professional capabilities.</CardDescription></CardHeader>
               <CardContent>
+                {isEditing && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <Input value={currentSkill} onChange={(e) => setCurrentSkill(e.target.value)} placeholder="Add a skill (e.g., React, Python)" onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddSkill();}}}/>
+                    <Button type="button" onClick={handleAddSkill}>Add Skill</Button>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
-                  {userProfile.skills.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="text-sm py-1.5">
+                  {(skillsArray || []).map((skill, index) => (
+                    <Badge key={index} variant="secondary" className="text-sm py-1 px-2.5">
                       {skill}
                       {isEditing && (
-                        <button className="ml-1 text-gray-500 hover:text-gray-700" aria-label="Remove skill">
+                        <button type="button" className="ml-1.5 text-muted-foreground hover:text-foreground" aria-label="Remove skill" onClick={() => handleRemoveSkill(skill)}>
                           &times;
                         </button>
                       )}
                     </Badge>
                   ))}
-                  
-                  {isEditing && (
-                    <div className="flex items-center gap-2 mt-4 w-full">
-                      <Input placeholder="Add a new skill..." className="max-w-xs" />
-                      <Button size="sm">Add</Button>
-                    </div>
-                  )}
+                  {!isEditing && skillsArray?.length === 0 && <p className="text-muted-foreground">No skills added yet.</p>}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Certifications Section - similar structure to Education/Experience */}
+          {/* For brevity, not fully implementing the form fields here but structure would be similar */}
+           <TabsContent value="certifications"> {/* Placeholder Tab for UI consistency */}
+             <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div><CardTitle>Certifications</CardTitle><CardDescription>Your professional certifications.</CardDescription></div>
+                    {isEditing && <Button type="button" size="sm" variant="outline" onClick={() => appendCertification({ name: "", issuer: "", date: "", credentialURL:"" })}><PlusCircle className="mr-2 h-4 w-4"/>Add Certification</Button>}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                {certificationFields.map((field, index) => (
+                  <div key={field.id} className="border p-4 rounded-lg space-y-2 relative">
+                    {isEditing && <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-red-500 hover:text-red-700" onClick={() => removeCertification(index)}><Trash2 className="h-4 w-4"/></Button>}
+                     <div className="flex items-center gap-2">
+                        <Star className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+                        <div className="flex-grow">
+                            {isEditing ? (<Input {...register(`certifications.${index}.name`)} placeholder="Certification Name"/>) : (<h4 className="font-medium">{field.name || user.certifications?.[index]?.name}</h4>)}
+                            {errors.certifications?.[index]?.name && <p className="text-red-500 text-sm">{errors.certifications[index].name.message}</p>}
+                            {isEditing ? (<Input {...register(`certifications.${index}.issuer`)} placeholder="Issuing Organization"/>) : (<p className="text-sm text-muted-foreground">{field.issuer || user.certifications?.[index]?.issuer}</p>)}
+                            {errors.certifications?.[index]?.issuer && <p className="text-red-500 text-sm">{errors.certifications[index].issuer.message}</p>}
+                        </div>
+                        {isEditing ? (<Input {...register(`certifications.${index}.date`)} placeholder="Date Issued (e.g., 2021)"/>) : (<Badge variant="outline">{field.date || user.certifications?.[index]?.date}</Badge>)}
+                     </div>
+                     {isEditing ? (<Input {...register(`certifications.${index}.credentialURL`)} placeholder="Credential URL (Optional)"/>) : ( (field.credentialURL || user.certifications?.[index]?.credentialURL) && <a href={field.credentialURL || user.certifications?.[index]?.credentialURL} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline mt-1 pl-7 block">View Credential</a>)}
+                     {errors.certifications?.[index]?.credentialURL && <p className="text-red-500 text-sm mt-1 pl-7">{errors.certifications[index].credentialURL.message}</p>}
+                  </div>
+                ))}
+                 {!isEditing && user.certifications?.length === 0 && <p className="text-muted-foreground">No certifications added yet.</p>}
+                </CardContent>
+             </Card>
+           </TabsContent>
           
           <TabsContent value="settings">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
-                  <CardDescription>Manage your account preferences</CardDescription>
-                </CardHeader>
+                <CardHeader><CardTitle>Account Settings</CardTitle><CardDescription>Manage your account preferences.</CardDescription></CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" defaultValue={userProfile.email} disabled={!isEditing} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" defaultValue={userProfile.phone} disabled={!isEditing} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" value="********" disabled={!isEditing} />
-                  </div>
+                  {isEditing ? (
+                    <>
+                      <div><Label htmlFor="username">Username</Label><Input id="username" {...register("username")} />{errors.username && <p className="text-red-500 text-sm">{errors.username.message}</p>}</div>
+                      <div><Label htmlFor="email">Email Address</Label><Input id="email" type="email" {...register("email")} />{errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}</div>
+                      {/* Password change should be a separate, more secure form */}
+                      <Button type="button" variant="outline" onClick={() => toast.info("Password change form coming soon!")}>Change Password</Button>
+                    </>
+                  ) : (
+                    <>
+                      <p><strong>Username:</strong> {user.username}</p>
+                      <p><strong>Email:</strong> {user.email}</p>
+                    </>
+                  )}
                 </CardContent>
-                <CardFooter>
-                  <Button variant="outline">Change Password</Button>
-                </CardFooter>
               </Card>
               
               <Card>
-                <CardHeader>
-                  <CardTitle>Privacy Settings</CardTitle>
-                  <CardDescription>Control what information is visible to others</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Profile Visibility</h4>
-                      <p className="text-sm text-gray-500">Make your profile visible to employers</p>
+                <CardHeader><CardTitle>Privacy & Notification Settings</CardTitle><CardDescription>Control what information is visible and how you receive alerts.</CardDescription></CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div><Label htmlFor="profileVisibility" className="font-medium">Profile Visibility</Label><p className="text-sm text-muted-foreground">Who can see your full profile.</p></div>
+                        {isEditing ? (<Controller name="profileVisibility" control={control} render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value || user.profileVisibility}><SelectTrigger className="w-[180px]"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="public">Public</SelectItem><SelectItem value="privateToEmployers">Employers Only</SelectItem><SelectItem value="private">Private</SelectItem></SelectContent></Select>
+                        )}/>) : <Badge variant="outline">{user.profileVisibility || "Default"}</Badge>}
                     </div>
-                    <div>
-                      {/* Switch component would go here */}
-                      <div className="h-6 w-12 bg-jobconnect-primary rounded-full relative">
-                        <div className="h-4 w-4 bg-white rounded-full absolute right-1 top-1"></div>
-                      </div>
+                    <div className="flex items-center justify-between">
+                        <div><Label htmlFor="contactInfoVisibility" className="font-medium">Contact Info Visibility</Label><p className="text-sm text-muted-foreground">Who can see your email/phone.</p></div>
+                         {isEditing ? (<Controller name="contactInfoVisibility" control={control} render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value || user.contactInfoVisibility}><SelectTrigger className="w-[180px]"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="public">Public</SelectItem><SelectItem value="connections">Connections</SelectItem><SelectItem value="private">Private</SelectItem></SelectContent></Select>
+                        )}/>) : <Badge variant="outline">{user.contactInfoVisibility || "Default"}</Badge>}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Contact Information</h4>
-                      <p className="text-sm text-gray-500">Allow employers to see your contact details</p>
+                    <div className="flex items-center justify-between">
+                        <div><Label htmlFor="jobAlertsEnabled" className="font-medium">Job Alerts</Label><p className="text-sm text-muted-foreground">Receive email notifications for new job matches.</p></div>
+                        {isEditing ? (<Controller name="jobAlertsEnabled" control={control} render={({ field }) => (
+                            <Switch id="jobAlertsEnabled" checked={field.value === undefined ? user.jobAlertsEnabled : field.value} onCheckedChange={field.onChange} />
+                        )}/>) : <Badge variant={user.jobAlertsEnabled ? "default" : "outline"}>{user.jobAlertsEnabled ? "Enabled" : "Disabled"}</Badge>}
                     </div>
-                    <div>
-                      {/* Switch component would go here */}
-                      <div className="h-6 w-12 bg-gray-300 dark:bg-gray-700 rounded-full relative">
-                        <div className="h-4 w-4 bg-white rounded-full absolute left-1 top-1"></div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Job Alerts</h4>
-                      <p className="text-sm text-gray-500">Receive notifications about new job matches</p>
-                    </div>
-                    <div>
-                      {/* Switch component would go here */}
-                      <div className="h-6 w-12 bg-jobconnect-primary rounded-full relative">
-                        <div className="h-4 w-4 bg-white rounded-full absolute right-1 top-1"></div>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
         </Tabs>
         
-        <section className="mb-6">
-          <h2 className="text-xl font-bold mb-4">Profile Strength</h2>
-          <Card>
-            <CardContent className="py-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <p className="text-lg font-medium">Your profile is 75% complete</p>
-                  <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Strong</Badge>
-                </div>
-                
-                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                  <div className="h-full bg-jobconnect-primary rounded-full" style={{ width: '75%' }}></div>
-                </div>
-                
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Complete your profile to increase visibility to employers and get more job matches.
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <FeatureCard 
-                    icon={<User />}
-                    title="Add a professional photo"
-                    description="Profiles with photos get 14x more views"
-                  />
-                  <FeatureCard 
-                    icon={<Briefcase />}
-                    title="Add more work experience"
-                    description="Highlight your relevant job history"
-                  />
-                  <FeatureCard 
-                    icon={<Calendar />}
-                    title="Set your availability"
-                    description="Let employers know when you can start"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
+        {/* Profile Strength section can be re-added with actual logic */}
+        {/* <section className="my-8"> ... </section> */}
+      </form>
     </div>
   );
 }

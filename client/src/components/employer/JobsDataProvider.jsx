@@ -1,88 +1,51 @@
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getEmployerDashboardAnalytics, getMyPostedJobs, getJobApplications } from "@/services/api"; // Assuming we might add more here
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext"; // To get companyId if admin is viewing
 
-const JobsDataContext = createContext();
+const JobsDataContext = createContext(undefined);
 
 export function JobsDataProvider({ children }) {
-  const [data, setData] = useState({
-    activeJobs: [],
-    recentApplicants: [],
-    stats: {
-      activeJobsCount: 0,
-      totalApplicants: 0,
-      newToday: 0,
-      profileViews: 0
-    }
+  const { user } = useAuth();
+
+  // Fetch Employer Dashboard Analytics (Stats)
+  // Admin can view specific company stats by passing companyIdForAdmin from user.company (if admin has one) or a selected one
+  // For a regular employer, their companyId is derived by the backend from their user session.
+  const companyIdForAdmin = user?.role === 'admin' ? user.company : undefined; // Example if admin is tied to a company
+
+  const { data: analyticsData, isLoading: isLoadingAnalytics, isError: isAnalyticsError, error: analyticsApiError } = useQuery({
+    queryKey: ['employerDashboardAnalytics', user?._id, companyIdForAdmin], // Include user ID or company ID if it affects query
+    queryFn: () => getEmployerDashboardAnalytics(companyIdForAdmin).then(res => res.data),
+    enabled: !!user, // Only fetch if user is loaded
   });
 
   useEffect(() => {
-    // Mock data - in a real app this would come from an API
-    const mockData = {
-      activeJobs: [
-        {
-          id: 1,
-          title: "Senior Web Developer",
-          postedDate: "May 15, 2025",
-          applicants: 12,
-          daysLeft: 22,
-          status: "Active"
-        },
-        {
-          id: 2,
-          title: "UI/UX Designer",
-          postedDate: "May 18, 2025",
-          applicants: 8,
-          daysLeft: 19,
-          status: "Active"
-        },
-        {
-          id: 3,
-          title: "Content Writer",
-          postedDate: "May 20, 2025",
-          applicants: 5,
-          daysLeft: 17,
-          status: "Active"
-        }
-      ],
-      recentApplicants: [
-        {
-          id: 1,
-          name: "Emma Thompson",
-          position: "Senior Web Developer",
-          appliedDate: "May 21, 2025",
-          status: "New",
-          avatar: ""
-        },
-        {
-          id: 2,
-          name: "Michael Rodriguez",
-          position: "UI/UX Designer",
-          appliedDate: "May 20, 2025",
-          status: "Reviewed",
-          avatar: ""
-        },
-        {
-          id: 3,
-          name: "Sarah Johnson",
-          position: "Content Writer",
-          appliedDate: "May 19, 2025",
-          status: "Interview",
-          avatar: ""
-        }
-      ],
-      stats: {
-        activeJobsCount: 3,
-        totalApplicants: 25,
-        newToday: 4,
-        profileViews: 156
-      }
-    };
+    if(isAnalyticsError && analyticsApiError) {
+        toast.error(analyticsApiError.response?.data?.error || "Failed to fetch dashboard analytics.");
+    }
+  }, [isAnalyticsError, analyticsApiError]);
 
-    setData(mockData);
-  }, []);
+  // For now, activeJobs and recentApplicants will be fetched by their respective components.
+  // This provider will focus on the stats for StatCards.
+  // If we wanted this provider to supply all dashboard data, we'd add more useQuery calls here.
+
+  const value = {
+    // activeJobs: [], // To be fetched by ActiveJobsList directly or another query here
+    // recentApplicants: [], // To be fetched by RecentApplicantsTable directly
+    stats: {
+      activeJobsCount: analyticsData?.totalActiveJobs || 0,
+      totalApplicants: analyticsData?.totalApplicationsReceived || 0,
+      applicationsLast30Days: analyticsData?.applicationsLast30Days || 0, // New name
+      // profileViews: 0, // Not available from this endpoint
+    },
+    isLoadingStats: isLoadingAnalytics,
+    // Pass along other specific data/loading states if this provider handles more
+  };
 
   return (
-    <JobsDataContext.Provider value={data}>
+    <JobsDataContext.Provider value={value}>
       {children}
     </JobsDataContext.Provider>
   );
@@ -90,7 +53,7 @@ export function JobsDataProvider({ children }) {
 
 export function useJobsData() {
   const context = useContext(JobsDataContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useJobsData must be used within a JobsDataProvider");
   }
   return context;
