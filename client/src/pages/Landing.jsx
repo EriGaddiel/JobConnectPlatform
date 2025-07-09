@@ -1,4 +1,5 @@
 
+// Keep one consolidated block of imports
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/SearchBar";
 import { FeatureCard } from "@/components/FeatureCard";
@@ -6,18 +7,15 @@ import { TestimonialCard } from "@/components/TestimonialCard";
 import { JobCard } from "@/components/JobCard";
 import Navbar from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Button } from "@/components/ui/button";
-import { SearchBar } from "@/components/SearchBar";
-import { FeatureCard } from "@/components/FeatureCard";
-import { TestimonialCard } from "@/components/TestimonialCard";
-import { JobCard } from "@/components/JobCard";
-import Navbar from "@/components/navbar";
-import { Footer } from "@/components/footer";
+// Link and useNavigate are correctly imported together below, no need for a separate Link here if it was from the first block
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getAllJobs } from "@/services/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase, Building, Users, TrendingUp, Search, UserPlus, Edit, Award, Lightbulb, Zap, ShieldCheck, Palette, ShoppingBag, Hammer, Code } from "lucide-react"; // Added more icons
+import {
+  Briefcase, Building, Users, TrendingUp, Search, UserPlus, Edit, Award,
+  Lightbulb, Zap, ShieldCheck, Palette, ShoppingBag, Hammer, Code
+} from "lucide-react";
 
 // Helper to format date (if needed for JobCard, though JobCard might handle it)
 const formatDate = (dateString) => {
