@@ -22,49 +22,68 @@ export default function Auth() {
   const [loginPassword, setLoginPassword] = useState("");
   
   const [registerName, setRegisterName] = useState("");
+  const [registerName, setRegisterName] = useState("");
+  const [registerUsername, setRegisterUsername] = useState(""); // Added username state
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
   
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false); // Will use isLoading from useAuth
+  // const navigate = useNavigate(); // Navigation handled by AuthContext for login/signup success
+
+  const { login, signup, isLoading, loginError, signupError, user, isAuthenticated } = useAuth(); // Use a single isLoading for now
+
+  useEffect(() => {
+    if (loginError) {
+      toast.error(loginError.response?.data?.error || "Login failed. Please try again.");
+    }
+  }, [loginError]);
+
+  useEffect(() => {
+    if (signupError) {
+      toast.error(signupError.response?.data?.error || "Signup failed. Please try again.");
+    }
+  }, [signupError]);
+
+  // Redirect if user is already authenticated
   const navigate = useNavigate();
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === "employer") navigate("/employer/dashboard");
+      else if (user.role === "admin") navigate("/admin/dashboard");
+      else navigate("/dashboard");
+    }
+  }, [isAuthenticated, user, navigate]);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    // setLoading(true); //isLoading from useAuth
     
-    // Frontend validation only - no actual auth implementation
     if (!loginEmail || !loginPassword) {
       toast.error("Please fill in all fields");
-      setLoading(false);
+      // setLoading(false);
       return;
     }
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Simulate successful login
-    toast.success("Login successful! Redirecting to dashboard...");
-    
-    // Redirect based on role
-    if (role === "employer") {
-      navigate("/employer/dashboard");
-    } else if (role === "admin") {
-      navigate("/admin/dashboard");
-    } else {
-      navigate("/dashboard");
+    try {
+      await login({ usernameOrEmail: loginEmail, password: loginPassword });
+      // Navigation is handled by AuthContext's loginMutation onSuccess
+      // toast.success("Login successful! Redirecting..."); // Also can be handled in AuthContext or here
+    } catch (err) {
+      // Error toast is handled by useEffect [loginError]
+      // console.error("Login error in component:", err);
     }
-    setLoading(false);
+    // setLoading(false);
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    // setLoading(true); //isLoading from useAuth
     
-    // Frontend validation only
-    if (!registerName || !registerEmail || !registerPassword || !registerConfirmPassword) {
-      toast.error("Please fill in all fields");
-      setLoading(false);
+    if (!registerName || !registerUsername || !registerEmail || !registerPassword || !registerConfirmPassword) {
+      toast.error("Please fill in all (Full Name, Username, Email, Password, Confirm Password) fields");
+      // setLoading(false);
       return;
     }
     
@@ -72,22 +91,31 @@ export default function Auth() {
       toast.error("Passwords do not match", {
         description: "Please make sure your passwords match.",
       });
-      setLoading(false);
+      // setLoading(false);
       return;
     }
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Simulate successful registration
-    toast.success("Account created! Please login with your credentials.");
-    setActiveTab("login");
-    setLoading(false);
+    try {
+      await signup({
+        fullName: registerName,
+        username: registerUsername,
+        email: registerEmail,
+        password: registerPassword,
+        role: role // Pass the selected role
+      });
+      // After successful signup, AuthContext's signupMutation onSuccess handles navigation
+      // toast.success("Account created! Redirecting..."); // Or prompt to check email for verification
+      // setActiveTab("login"); // Or redirect to dashboard/verification page
+    } catch (err) {
+      // Error toast is handled by useEffect [signupError]
+      // console.error("Signup error in component:", err);
+    }
+    // setLoading(false);
   };
 
   return (
     <>
-      <Navbar />
+      <Navbar /> {/* Navbar might need to be updated to reflect auth state */}
       
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
         <div className="container px-4 mx-auto">
@@ -217,6 +245,16 @@ export default function Auth() {
                           value={registerName}
                           onChange={(e) => setRegisterName(e.target.value)}
                           required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="register-username">Username</Label>
+                        <Input
+                          id="register-username"
+                          placeholder="johnsmith"
+                          value={registerUsername}
+                          onChange={(e) => setRegisterUsername(e.target.value)}
+                          required
                         />
                       </div>
                       <div className="space-y-2">

@@ -8,116 +8,217 @@ import Navbar from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Link } from "react-router-dom";
 
+import { Button } from "@/components/ui/button";
+import { SearchBar } from "@/components/SearchBar";
+import { FeatureCard } from "@/components/FeatureCard";
+import { TestimonialCard } from "@/components/TestimonialCard";
+import { JobCard } from "@/components/JobCard";
+import Navbar from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
+import { useQuery } from "@tanstack/react-query";
+import { getAllJobs } from "@/services/api"; // Assuming a way to fetch featured jobs
+import { Skeleton } from "@/components/ui/skeleton";
+import { Briefcase, Building, Users, TrendingUp, Search, UserPlus, Edit, Award, Lightbulb, Zap, ShieldCheck, Palette, ShoppingBag, Hammer, Code } from "lucide-react"; // Added more icons
+
+// Helper to format date (if needed for JobCard, though JobCard might handle it)
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+
 export default function Landing() {
-  // Sample featured jobs data
-  const featuredJobs = [
+  const navigate = useNavigate();
+
+  // Fetch featured jobs
+  const { data: featuredJobsData, isLoading: isLoadingFeaturedJobs, isError: isErrorFeaturedJobs } = useQuery({
+    queryKey: ['featuredJobs'],
+    // Simulate fetching featured jobs: get newest 4 open jobs
+    queryFn: () => getAllJobs({ limit: 4, status: 'open', sortBy: 'createdAt', sortOrder: 'desc' }).then(res => res.data.jobs),
+  });
+
+  const featuredJobs = featuredJobsData || [];
+
+  // Stats data - these should ideally come from an API
+  const platformStats = [
+    { value: "10k+", label: "Active Jobs", icon: <Briefcase className="h-8 w-8 mb-2 text-jobconnect-primary" /> },
+    { value: "8k+", label: "Companies Hiring", icon: <Building className="h-8 w-8 mb-2 text-jobconnect-primary" /> },
+    { value: "15k+", label: "Skilled Job Seekers", icon: <Users className="h-8 w-8 mb-2 text-jobconnect-primary" /> },
+    { value: "Top Rated", label: "User Satisfaction", icon: <TrendingUp className="h-8 w-8 mb-2 text-jobconnect-primary" /> }, // Changed from "95% Success Rate"
+  ];
+
+  const keyFeatures = [
     {
-      id: "job1",
-      title: "Senior Web Developer",
-      company: "TechCorp Inc",
-      location: "New York, NY",
-      type: "Full-time",
-      category: "Formal",
-      salary: "$80k - $120k",
-      posted: "2 days ago"
+      icon: <Lightbulb className="h-8 w-8 text-jobconnect-primary" />,
+      title: "Unified Job Market",
+      description: "Access both traditional full-time roles and flexible gig opportunities in one seamless platform. No more juggling multiple sites!"
     },
     {
-      id: "job2",
-      title: "Delivery Driver",
-      company: "FastCourier",
-      location: "Chicago, IL",
-      type: "Part-time",
-      category: "Informal",
-      salary: "$15 - $25/hr",
-      posted: "1 day ago"
+      icon: <Zap className="h-8 w-8 text-jobconnect-primary" />,
+      title: "Smart Matching (Coming Soon)",
+      description: "Our intelligent algorithms will connect you with the most relevant jobs or candidates, saving you time and effort."
     },
     {
-      id: "job3",
-      title: "Marketing Specialist",
-      company: "BrandBoost",
-      location: "Remote",
-      type: "Contract",
-      category: "Formal",
-      salary: "$50k - $70k",
-      posted: "3 days ago"
-    },
-    {
-      id: "job4",
-      title: "House Cleaner",
-      company: "CleanHome Services",
-      location: "Austin, TX",
-      type: "Freelance",
-      category: "Informal",
-      salary: "$20 - $30/hr",
-      posted: "Just now"
+      icon: <ShieldCheck className="h-8 w-8 text-jobconnect-primary" />,
+      title: "Secure & Direct Communication",
+      description: "Connect directly and securely with employers or candidates through our integrated messaging system."
     },
   ];
 
+  const popularCategories = [
+    { name: "Software Development", icon: <Code className="h-6 w-6 text-jobconnect-primary" />, jobs: "1500+" },
+    { name: "Creative & Design", icon: <Palette className="h-6 w-6 text-jobconnect-primary" />, jobs: "800+" },
+    { name: "Delivery Services", icon: <ShoppingBag className="h-6 w-6 text-jobconnect-primary" />, jobs: "1200+" },
+    { name: "Home Services", icon: <Hammer className="h-6 w-6 text-jobconnect-primary" />, jobs: "950+" },
+  ];
+
+  const handleGlobalSearch = (query, location) => {
+    const params = new URLSearchParams();
+    if (query) params.set("search", query);
+    if (location) params.set("location", location);
+    navigate(`/jobs?${params.toString()}`);
+  };
+
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground"> {/* Use theme colors */}
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="hero-pattern py-20 lg:py-32">
-        <div className="container px-4 mx-auto">
-          <div className="max-w-4xl mx-auto text-center mb-12">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-jobconnect-primary to-jobconnect-secondary bg-clip-text text-transparent">
-              Find Your Perfect Job Match
+      {/* Hero Section - Placeholder for potential dynamic background/illustration */}
+      {/* <div className="absolute inset-0 -z-10"> POSSIBLE BACKGROUND ELEMENT </div> */}
+      <section className="relative hero-pattern py-20 lg:py-32 overflow-hidden"> {/* Added relative and overflow-hidden for potential bg elements */}
+        <div className="container px-4 mx-auto relative z-10"> {/* Added relative z-10 for content over bg */}
+          <div className="max-w-3xl mx-auto text-center"> {/* Reduced max-width for tighter focus */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6"> {/* Use font-extrabold */}
+              {/* Option A Headline */}
+              Unlock Your Next Opportunity.
+              <span className="block sm:inline bg-gradient-to-r from-jobconnect-primary to-jobconnect-secondary bg-clip-text text-transparent mt-2 sm:mt-0"> Big or Small, We Connect All.</span>
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-              Connecting talent with opportunity across formal and informal job markets
+            <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+              {/* Option A Sub-headline */}
+              JobConnect: Seamlessly bridging the gap between traditional careers and the dynamic gig economy. Discover diverse roles or find the perfect talent, effortlessly.
             </p>
-            <div className="max-w-3xl mx-auto">
-              <SearchBar className="mb-8" />
-              <div className="flex flex-wrap justify-center gap-4">
-                <Button asChild size="lg" className="px-8">
-                  <Link to="/jobs">Find Jobs</Link>
+            <div className="max-w-2xl mx-auto"> {/* SearchBar slightly narrower */}
+              <SearchBar
+                className="mb-8 shadow-lg"
+                placeholder="Job title, keywords, or company"
+                onSearch={handleGlobalSearch} // Use the new handler
+              />
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <Button asChild size="lg" className="px-8 py-6 text-lg w-full sm:w-auto"> {/* Larger, more prominent CTA */}
+                  <Link to="/jobs"><Search className="mr-2 h-5 w-5"/>Find Jobs</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="px-8">
-                  <Link to="/post-job">Post a Job</Link>
+                <Button asChild variant="outline" size="lg" className="px-8 py-6 text-lg w-full sm:w-auto">
+                  <Link to="/post-job"><Briefcase className="mr-2 h-5 w-5"/>Post a Job</Link>
                 </Button>
               </div>
             </div>
           </div>
           
-          <div className="mt-12 md:mt-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center p-4">
-              <div className="text-jobconnect-primary text-4xl font-bold mb-2">10k+</div>
-              <div className="text-gray-600 dark:text-gray-300">Active Jobs</div>
-            </div>
-            <div className="text-center p-4">
-              <div className="text-jobconnect-primary text-4xl font-bold mb-2">8k+</div>
-              <div className="text-gray-600 dark:text-gray-300">Companies</div>
-            </div>
-            <div className="text-center p-4">
-              <div className="text-jobconnect-primary text-4xl font-bold mb-2">15k+</div>
-              <div className="text-gray-600 dark:text-gray-300">Job Seekers</div>
-            </div>
-            <div className="text-center p-4">
-              <div className="text-jobconnect-primary text-4xl font-bold mb-2">95%</div>
-              <div className="text-gray-600 dark:text-gray-300">Success Rate</div>
-            </div>
+          {/* Stats Section - Refactored */}
+          <div className="mt-16 md:mt-24 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 text-center">
+            {platformStats.map(stat => (
+              <div key={stat.label} className="p-4 rounded-lg bg-card/50 dark:bg-card/70 shadow-md">
+                <div className="flex justify-center items-center">{stat.icon}</div>
+                <div className="text-jobconnect-primary text-3xl lg:text-4xl font-bold mb-1">{stat.value}</div>
+                <div className="text-sm text-muted-foreground">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Jobs Section */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-900">
+      {/* Key Features Section (New) */}
+      <section className="py-16 lg:py-24 bg-muted/30 dark:bg-muted/10">
         <div className="container px-4 mx-auto">
-          <div className="max-w-4xl mx-auto text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Jobs</h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Discover opportunities that match your skills and interests
+          <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why Choose JobConnect?</h2>
+            <p className="text-lg text-muted-foreground">
+              Discover the advantages of a unified platform for all your employment needs.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredJobs.map(job => (
-              <JobCard key={job.id} {...job} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {keyFeatures.map((feature) => (
+              <FeatureCard key={feature.title} icon={feature.icon} title={feature.title} description={feature.description} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Popular Categories Section (New) */}
+      <section className="py-16 lg:py-24">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Explore Popular Categories</h2>
+            <p className="text-lg text-muted-foreground">
+              Find opportunities in various sectors, from tech to trades.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {popularCategories.map(category => (
+              <Link key={category.name} to={`/jobs?category_like=${encodeURIComponent(category.name)}`} className="block group">
+                <Card className="h-full hover:shadow-xl transition-shadow duration-300 hover:border-jobconnect-primary">
+                  <CardContent className="p-6 text-center">
+                    <div className="flex justify-center items-center mb-4 text-jobconnect-primary group-hover:scale-110 transition-transform">
+                        {category.icon}
+                    </div>
+                    <h3 className="text-xl font-semibold mb-1">{category.name}</h3>
+                    <p className="text-sm text-muted-foreground">{category.jobs} Openings</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+           <div className="mt-12 text-center">
+            <Button asChild variant="ghost" size="lg" className="text-jobconnect-primary">
+              <Link to="/jobs">Browse All Categories &rarr;</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Featured Jobs Section - Now Dynamic */}
+      <section className="py-16 lg:py-24 bg-muted/30 dark:bg-muted/10">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Hot Off The Press: Featured Jobs</h2>
+            <p className="text-lg text-muted-foreground">
+              Handpicked opportunities to kickstart your search.
+            </p>
+          </div>
+          {isLoadingFeaturedJobs && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="p-4 space-y-3"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-4 w-1/4" /></Card>
+              ))}
+            </div>
+          )}
+          {!isLoadingFeaturedJobs && isErrorFeaturedJobs && <p className="text-center text-red-500">Could not load featured jobs.</p>}
+          {!isLoadingFeaturedJobs && !isErrorFeaturedJobs && featuredJobs.length === 0 && <p className="text-center text-muted-foreground">No featured jobs available at the moment. Check back soon!</p>}
+          {!isLoadingFeaturedJobs && !isErrorFeaturedJobs && featuredJobs.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredJobs.map(job => (
+                <JobCard
+                    key={job._id}
+                    id={job._id}
+                    title={job.title}
+                    company={job.companyName || (job.company?.name || "N/A")}
+                    companyLogo={job.companyLogo || job.company?.logo}
+                    location={job.location}
+                    type={job.employmentType}
+                    category={job.category}
+                    salary={job.salary || (job.salaryMin && job.salaryMax ? `${job.currency || '$'}${job.salaryMin} - ${job.currency || '$'}${job.salaryMax}`: "Not Disclosed")}
+                    posted={formatDate(job.createdAt)}
+                    {...job}
+                />
+              ))}
+            </div>
+          )}
           <div className="mt-12 text-center">
-            <Button asChild variant="outline" size="lg">
-              <Link to="/jobs">View All Jobs</Link>
+            <Button asChild variant="default" size="lg" className="px-8 py-6 text-lg">
+              <Link to="/jobs">Explore All Jobs</Link>
             </Button>
           </div>
         </div>
@@ -133,29 +234,36 @@ export default function Landing() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-16">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-jobconnect-primary flex items-center justify-center text-white text-xl font-bold mx-auto mb-6">1</div>
-              <h3 className="text-xl font-semibold mb-3">Create an Account</h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Sign up as a job seeker or employer in minutes
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mt-16">
+            {/* Step 1 */}
+            <div className="text-center p-6 bg-card rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+              <div className="w-16 h-16 rounded-full bg-jobconnect-primary/10 text-jobconnect-primary flex items-center justify-center mx-auto mb-6 ring-4 ring-jobconnect-primary/20">
+                <UserPlus className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">1. Create Your Profile</h3>
+              <p className="text-muted-foreground">
+                Join JobConnect easily as a job seeker or an employer. Build your profile in minutes to get started.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-jobconnect-secondary flex items-center justify-center text-white text-xl font-bold mx-auto mb-6">2</div>
-              <h3 className="text-xl font-semibold mb-3">
-                {`${"{Post Jobs | Find Jobs}"}`}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Post your opportunities or search for jobs that match your skills
+            {/* Step 2 */}
+            <div className="text-center p-6 bg-card rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+              <div className="w-16 h-16 rounded-full bg-jobconnect-secondary/10 text-jobconnect-secondary flex items-center justify-center mx-auto mb-6 ring-4 ring-jobconnect-secondary/20">
+                <Search className="h-8 w-8" /> {/* Or Briefcase for employers */}
+              </div>
+              <h3 className="text-xl font-semibold mb-3">2. Discover & Engage</h3>
+              <p className="text-muted-foreground">
+                Employers post diverse job openings. Job seekers explore and find roles matching their unique skills.
               </p>
             </div>
             
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-jobconnect-tertiary flex items-center justify-center text-white text-xl font-bold mx-auto mb-6">3</div>
-              <h3 className="text-xl font-semibold mb-3">Connect and Succeed</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+            {/* Step 3 */}
+            <div className="text-center p-6 bg-card rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+              <div className="w-16 h-16 rounded-full bg-jobconnect-tertiary/10 text-jobconnect-tertiary flex items-center justify-center mx-auto mb-6 ring-4 ring-jobconnect-tertiary/20">
+                <Award className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">3. Connect & Succeed</h3>
+              <p className="text-muted-foreground">
                 Apply, interview, hire, and grow your career or business
               </p>
             </div>
