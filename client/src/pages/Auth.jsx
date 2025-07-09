@@ -187,8 +187,8 @@ export default function Auth() {
                           required 
                         />
                       </div>
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Loading..." : "Login"}
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Logging In..." : "Login"}
                       </Button>
                     </form>
                   </CardContent>
@@ -290,8 +290,8 @@ export default function Auth() {
                           required 
                         />
                       </div>
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Loading..." : "Create Account"}
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Creating Account..." : "Create Account"}
                       </Button>
                     </form>
                   </CardContent>

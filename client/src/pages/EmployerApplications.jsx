@@ -12,7 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyPostedJobs, getJobApplications, updateApplicationStatus as apiUpdateApplicationStatus } from "@/services/api";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Application } from "@/Models/application.model"; // For status enum (conceptual)
+// import { Application } from "@/Models/application.model"; // Removed conceptual import
 
 // Helper to format date
 const formatDate = (dateString) => {
